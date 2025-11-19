@@ -1,5 +1,3 @@
-
-
 # Informations du bot
 BOT_NAME = "Chronis"
 BOT_COLOR = 0x00AFF4  # Couleur bleue en hexadécimal

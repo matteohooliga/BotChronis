@@ -1,214 +1,157 @@
-
 import discord
 from discord import app_commands
-from discord.ext import commands
-from database import ChronosDatabase
-from utils import (
-    create_stats_embed,
-    create_all_stats_embed,
-    create_service_embed,
-    format_duration
-)
+from discord.ext import commands, tasks
+import aiosqlite
+from typing import List
+from datetime import datetime
+from utils import create_stats_embed, create_all_stats_embed, create_service_embed, format_duration
 import config
-
 
 class ServiceCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db = ChronosDatabase()
+        self.db = bot.db
+        self.refresh_service.start()
+
+    def cog_unload(self):
+        self.refresh_service.cancel()
+
+    @tasks.loop(seconds=1)
+    async def refresh_service(self):
+        try:
+            configs = await self.db.get_all_guild_configs()
+            for config_data in configs:
+                try:
+                    guild_id = int(config_data['guild_id'])
+                    active_sessions = await self.db.get_all_active_sessions(str(guild_id))
+                    if not active_sessions: continue
+                    await self.bot.update_service_message(guild_id, config_data)
+                except Exception: continue
+        except Exception as e:
+            print(f"Erreur boucle refresh : {e}")
+
+    @refresh_service.before_loop
+    async def before_refresh(self):
+        await self.bot.wait_until_ready()
+
+    async def _send_log(self, guild: discord.Guild, title: str, description: str, color: int, fields: list = []):
+        config_data = await self.db.get_guild_config(str(guild.id))
+        if not config_data or not config_data.get('log_channel_id'): return
+        try:
+            log_channel = guild.get_channel(int(config_data['log_channel_id']))
+            if not log_channel: return
+            embed = discord.Embed(title=title, description=description, color=color)
+            for name, value in fields: embed.add_field(name=name, value=value, inline=True)
+            embed.timestamp = datetime.now()
+            embed.set_footer(text="Log système Chronis")
+            await log_channel.send(embed=embed)
+        except Exception: pass
+
+    async def close_user_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        active_sessions = await self.db.get_all_active_sessions(str(interaction.guild_id))
+        choices = []
+        for session in active_sessions:
+            if current.lower() in session['username'].lower():
+                choices.append(app_commands.Choice(name=f"🟢 {session['username']}", value=session['user_id']))
+        return choices[:25]
+
+    # --- COMMANDES ---
 
     @app_commands.command(name="sum", description="Afficher vos statistiques de service")
-    @app_commands.describe(user="L'utilisateur dont vous voulez voir les statistiques (optionnel)")
-    async def sum_command(
-        self, 
-        interaction: discord.Interaction, 
-        user: discord.User = None
-    ):
-        """Afficher les statistiques d'un utilisateur"""
+    async def sum_command(self, interaction: discord.Interaction, user: discord.User = None):
         target_user = user or interaction.user
-        
-        # Récupérer les stats
-        stats = self.db.get_user_stats(str(target_user.id), str(interaction.guild_id))
-        
-        # Créer l'embed
+        stats = await self.db.get_user_stats(str(target_user.id), str(interaction.guild_id))
         embed = create_stats_embed(stats, target_user)
-        
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="sumall", description="Afficher les statistiques de tous les utilisateurs")
+    @app_commands.command(name="sumall", description="Afficher les statistiques globales")
     async def sumall_command(self, interaction: discord.Interaction):
-        """Afficher les statistiques globales"""
-        # Récupérer toutes les stats
-        all_stats = self.db.get_all_users_stats(str(interaction.guild_id))
-        
-        # Créer l'embed
+        all_stats = await self.db.get_all_users_stats(str(interaction.guild_id))
         embed = create_all_stats_embed(all_stats, interaction.guild)
-        
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="close", description="Forcer la fermeture d'une session de service")
-    @app_commands.describe(user="L'utilisateur dont la session doit être fermée")
+    @app_commands.command(name="close", description="Forcer la fermeture d'une session active")
+    @app_commands.autocomplete(user_id=close_user_autocomplete)
     @app_commands.default_permissions(manage_guild=True)
-    async def close_command(
-        self, 
-        interaction: discord.Interaction, 
-        user: discord.User
-    ):
-        """Forcer la fermeture d'une session (admin seulement)"""
-        # Vérifier si l'utilisateur a une session active
-        session = self.db.get_active_session(str(user.id), str(interaction.guild_id))
-        
+    async def close_command(self, interaction: discord.Interaction, user_id: str):
+        session = await self.db.get_active_session(str(user_id), str(interaction.guild_id))
         if not session:
-            await interaction.response.send_message(
-                config.MESSAGES['no_active_session'],
-                ephemeral=True
-            )
+            await interaction.response.send_message(config.MESSAGES['no_active_session'], ephemeral=True)
             return
         
-        # Terminer la session
-        ended_session = self.db.end_session(str(user.id), str(interaction.guild_id))
-        
-        if ended_session:
-            duration = format_duration(ended_session['total_duration'])
-            message = config.MESSAGES['service_forced_stop'].format(
-                user=user.mention,
-                duration=duration
-            )
-            
-            await interaction.response.send_message(message)
-            
-            # Mettre à jour le message de service
-            await self.update_service_message(interaction.guild)
+        try:
+            user_obj = interaction.guild.get_member(int(user_id)) or await self.bot.fetch_user(int(user_id))
+            user_mention = user_obj.mention
+        except: user_mention = f"<@{user_id}>"
 
-    @app_commands.command(name="reset", description="Réinitialiser toutes les heures de service du serveur (ADMIN)")
+        ended = await self.db.end_session(str(user_id), str(interaction.guild_id))
+        if ended:
+            duration = format_duration(ended['total_duration'])
+            msg = config.MESSAGES['service_forced_stop'].format(user=user_mention, duration=duration)
+            await interaction.response.send_message(msg, ephemeral=True)
+            await self.bot.update_service_message(interaction.guild_id)
+            await self._send_log(interaction.guild, "🔧 Force Close", "Fermeture manuelle.", discord.Color.orange(), [("Cible", user_mention), ("Mod", interaction.user.mention), ("Durée", f"`{duration}`")])
+        else:
+            await interaction.response.send_message("❌ Erreur.", ephemeral=True)
+
+    @app_commands.command(name="edittime", description="Modifier le temps de service d'un joueur")
+    @app_commands.choices(operation=[app_commands.Choice(name="Ajouter (+)", value="add"), app_commands.Choice(name="Retirer (-)", value="remove")])
+    @app_commands.default_permissions(manage_guild=True)
+    async def edittime_command(self, interaction: discord.Interaction, user: discord.User, operation: app_commands.Choice[str], minutes: int):
+        if minutes <= 0: return await interaction.response.send_message("⚠️ Minutes > 0 requises.", ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+        
+        ms = minutes * 60 * 1000 * (1 if operation.value == "add" else -1)
+        try:
+            await self.db.add_time_adjustment(str(user.id), str(interaction.guild_id), user.display_name, ms)
+            action = "ajouté" if operation.value == "add" else "retiré"
+            await interaction.followup.send(f"✅ {action.capitalize()} **{minutes} min** à {user.mention}.", ephemeral=True)
+            await self._send_log(interaction.guild, "📈 Temps Modifié", "Modification manuelle.", discord.Color.blue(), [("Mod", interaction.user.mention), ("Cible", user.mention), ("Action", action), ("Valeur", f"{minutes} min")])
+        except Exception as e: await interaction.followup.send(f"❌ Erreur: `{e}`", ephemeral=True)
+
+    @app_commands.command(name="reset", description="Réinitialiser les données (ADMIN)")
     @app_commands.default_permissions(administrator=True)
     async def reset_command(self, interaction: discord.Interaction):
-        """Supprime toutes les sessions du serveur courant"""
         await interaction.response.defer(ephemeral=True)
-
         try:
-            deleted = self.db.reset_guild_stats(str(interaction.guild_id))
-            await interaction.followup.send(
-                f"🧹 **Réinitialisation effectuée**.\n{deleted} session(s) supprimée(s) pour ce serveur.",
-                ephemeral=True
-            )
+            n = await self.db.reset_guild_stats(str(interaction.guild_id))
+            await interaction.followup.send(f"🧹 Reset effectué. {n} sessions supprimées.", ephemeral=True)
+            await self.bot.update_service_message(interaction.guild_id)
+            await self._send_log(interaction.guild, "⚠️ Reset Total", "Toutes les données effacées.", discord.Color.red(), [("Admin", interaction.user.mention)])
+        except Exception as e: await interaction.followup.send(f"❌ Erreur: `{e}`", ephemeral=True)
 
-            # Mettre à jour le message principal
-            await self.update_service_message(interaction.guild)
-        except Exception as e:
-            await interaction.followup.send(
-                f"❌ Erreur lors de la réinitialisation : `{e}`",
-                ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                "❌ Erreur lors de la fermeture de la session.",
-                ephemeral=True
-            )
-
-    @app_commands.command(name="setup", description="Configurer le système de service sur ce serveur")
-    @app_commands.describe(channel="Le salon où afficher le système de service")
+    @app_commands.command(name="setup", description="Configurer le système")
     @app_commands.default_permissions(administrator=True)
-    async def setup_command(
-        self, 
-        interaction: discord.Interaction, 
-        channel: discord.TextChannel = None
-    ):
-        """Configurer le bot sur le serveur"""
-        target_channel = channel or interaction.channel
-        
-        # Vérifier les permissions
-        permissions = target_channel.permissions_for(interaction.guild.me)
-        if not (permissions.send_messages and permissions.embed_links and permissions.read_message_history):
-            await interaction.response.send_message(
-                "❌ Le bot n'a pas les permissions nécessaires dans ce salon.\n"
-                "Permissions requises : `Envoyer des messages`, `Intégrer des liens`, `Lire l'historique des messages`",
-                ephemeral=True
-            )
-            return
-        
+    async def setup_command(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel, log_channel: discord.abc.GuildChannel = None):
+        # Vérification stricte du type ici pour éviter le crash TransformerError
+        if not isinstance(channel, discord.TextChannel):
+            return await interaction.response.send_message("❌ Le salon de service doit être un salon textuel.", ephemeral=True)
+        if log_channel and not isinstance(log_channel, discord.TextChannel):
+            return await interaction.response.send_message("❌ Le salon de logs doit être un salon textuel.", ephemeral=True)
+
         await interaction.response.defer(ephemeral=True)
-        
         try:
-            # Importer ServiceButtonsView
             from views import ServiceButtonsView
-            
-            # Créer l'embed et les boutons
+            from utils import create_service_embed
             embed = create_service_embed([], interaction.guild)
             view = ServiceButtonsView(self.bot)
-            
-            # Envoyer le message
-            message = await target_channel.send(embed=embed, view=view)
-            
-            # Sauvegarder la configuration
-            self.db.set_guild_config(
-                str(interaction.guild_id),
-                str(target_channel.id),
-                str(message.id)
-            )
-            
-            await interaction.followup.send(
-                config.MESSAGES['setup_complete'].format(channel=target_channel.mention),
-                ephemeral=True
-            )
-        except Exception as e:
-            await interaction.followup.send(
-                f"{config.MESSAGES['setup_error']}\n```{str(e)}```",
-                ephemeral=True
-            )
+            msg = await channel.send(embed=embed, view=view)
+            await self.db.set_guild_config(str(interaction.guild_id), str(channel.id), str(msg.id), str(log_channel.id) if log_channel else None)
+            await interaction.followup.send(f"✅ Configuré dans {channel.mention}" + (f" (Logs: {log_channel.mention})" if log_channel else ""), ephemeral=True)
+        except Exception as e: await interaction.followup.send(f"❌ Erreur: ```{e}```", ephemeral=True)
 
-    @app_commands.command(name="cancel", description="Annuler votre session actuelle sans l'enregistrer")
+    @app_commands.command(name="cancel", description="Annuler session")
     async def cancel_command(self, interaction: discord.Interaction):
-        """Annuler la session en cours"""
-        session = self.db.get_active_session(str(interaction.user.id), str(interaction.guild_id))
+        session = await self.db.get_active_session(str(interaction.user.id), str(interaction.guild_id))
+        if not session: return await interaction.response.send_message(config.MESSAGES['service_not_started'], ephemeral=True)
         
-        if not session:
-            await interaction.response.send_message(
-                config.MESSAGES['service_not_started'],
-                ephemeral=True
-            )
-            return
+        async with aiosqlite.connect(self.db.db_name) as db:
+            await db.execute("DELETE FROM sessions WHERE id = ?", (session['id'],))
+            await db.commit()
         
-        # Supprimer directement la session de la base de données
-        conn = self.db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM sessions WHERE id = ?", (session['id'],))
-        conn.commit()
-        
-        await interaction.response.send_message(
-            "🗑️ **Session annulée** !\nVotre session a été supprimée sans être enregistrée.",
-            ephemeral=True
-        )
-        
-        # Mettre à jour le message de service
-        await self.update_service_message(interaction.guild)
-
-    async def update_service_message(self, guild: discord.Guild):
-        """Mettre à jour le message de service principal"""
-        config_data = self.db.get_guild_config(str(guild.id))
-        
-        if not config_data:
-            return
-        
-        try:
-            channel = guild.get_channel(int(config_data['channel_id']))
-            if not channel:
-                return
-            
-            message = await channel.fetch_message(int(config_data['message_id']))
-            if not message:
-                return
-            
-            # Récupérer les sessions actives
-            active_sessions = self.db.get_all_active_sessions(str(guild.id))
-            
-            # Créer le nouvel embed (garder la view existante avec les callbacks)
-            embed = create_service_embed(active_sessions, guild)
-            
-            await message.edit(embed=embed)
-        except Exception as e:
-            print(f"Erreur lors de la mise à jour du message de service : {e}")
-
+        await interaction.response.send_message("🗑️ Session annulée.", ephemeral=True)
+        await self.bot.update_service_message(interaction.guild_id)
+        await self._send_log(interaction.guild, "🗑️ Service Annulé", "Annulation utilisateur.", discord.Color.dark_red(), [("User", interaction.user.mention)])
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServiceCommands(bot))
