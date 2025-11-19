@@ -42,7 +42,33 @@ class ServiceCommands(commands.Cog):
                 choices.append(app_commands.Choice(name=f"🟢 {session['username']}", value=session['user_id']))
         return choices[:25]
 
-    # --- COMMANDES ---
+    # --- COMMANDES D'INFORMATION ---
+
+    @app_commands.command(name="about", description="Afficher les informations et le lien du bot")
+    async def about_command(self, interaction: discord.Interaction):
+        """Affiche les crédits et le lien GitHub du bot"""
+        embed = discord.Embed(
+            title=f"ℹ️ À propos de {config.BOT_NAME}",
+            description="Chronis est un bot open-source de gestion de temps de service pour serveurs Roleplay.",
+            color=config.BOT_COLOR
+        )
+        
+        embed.add_field(name="📦 Version", value=f"`{config.BOT_VERSION}`", inline=True)
+        embed.add_field(name="🐍 Langage", value="`Python (discord.py)`", inline=True)
+        embed.add_field(name="💻 Développeur", value="matteohooliga", inline=True)
+        
+        embed.add_field(
+            name="🔗 Liens Utiles", 
+            value=f"[📂 **Code Source (GitHub)**]({config.GITHUB_LINK})\n[🐛 Signaler un bug]({config.GITHUB_LINK}/issues)", 
+            inline=False
+        )
+        
+        embed.set_footer(text="Développé avec ❤️ pour la communauté RP.")
+        embed.timestamp = datetime.now()
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # --- COMMANDES DE SERVICE ---
 
     @app_commands.command(name="sum", description="Afficher vos statistiques de service")
     async def sum_command(self, interaction: discord.Interaction, user: discord.User = None):
@@ -76,7 +102,6 @@ class ServiceCommands(commands.Cog):
             await interaction.response.send_message(msg, ephemeral=True)
             await self.bot.update_service_message(interaction.guild_id)
             
-            # LOG FORCE CLOSE
             await self.bot.send_log(
                 interaction.guild.id,
                 "🔧 Service Fermé (Force Close)",
@@ -99,7 +124,6 @@ class ServiceCommands(commands.Cog):
             action = "ajouté" if operation.value == "add" else "retiré"
             await interaction.followup.send(f"✅ {action.capitalize()} **{minutes} min** à {user.mention}.", ephemeral=True)
             
-            # LOG EDIT TIME
             await self.bot.send_log(
                 interaction.guild.id,
                 "📈 Temps Modifié",
@@ -118,7 +142,6 @@ class ServiceCommands(commands.Cog):
             await interaction.followup.send(f"🧹 Reset effectué. {n} sessions supprimées.", ephemeral=True)
             await self.bot.update_service_message(interaction.guild_id)
             
-            # LOG RESET
             await self.bot.send_log(
                 interaction.guild.id,
                 "⚠️ Réinitialisation Totale",
@@ -159,7 +182,6 @@ class ServiceCommands(commands.Cog):
         await interaction.response.send_message("🗑️ Session annulée.", ephemeral=True)
         await self.bot.update_service_message(interaction.guild_id)
         
-        # LOG CANCEL
         await self.bot.send_log(
             interaction.guild.id,
             "🗑️ Service Annulé",

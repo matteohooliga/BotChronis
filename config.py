@@ -1,11 +1,14 @@
 # Informations du bot
 BOT_NAME = "Chronis"
 BOT_COLOR = 0x00AFF4  # Couleur bleue en hexadécimal
+BOT_VERSION = "2.1.0"
+GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
 
 # Configuration des embeds
 EMBED_TITLE = "🔍 Utilisateur(s) en service"
 EMBED_DESCRIPTION_EMPTY = "Aucun utilisateur n'est en service… 😢"
-EMBED_FOOTER = "⚠️ Si le bot ne répond pas, cela peut signifier qu'il redémarre."
+# Le footer affiche maintenant le lien GitHub pour être visible partout
+EMBED_FOOTER = f"Chronis V{BOT_VERSION} | {GITHUB_LINK}"
 
 # Configuration des boutons
 BUTTONS = {
