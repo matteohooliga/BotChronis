@@ -44,29 +44,37 @@ class ServiceCommands(commands.Cog):
 
     # --- COMMANDES D'INFORMATION ---
 
-    @app_commands.command(name="about", description="Afficher les informations et le lien du bot")
+    @app_commands.command(name="about", description="Afficher les informations et liens du bot")
     async def about_command(self, interaction: discord.Interaction):
-        """Affiche les crédits et le lien GitHub du bot"""
+        """Affiche les crédits, le support et le lien GitHub"""
         embed = discord.Embed(
             title=f"ℹ️ À propos de {config.BOT_NAME}",
-            description="Chronis est un bot open-source de gestion de temps de service pour serveurs Roleplay.",
+            description="Chronis est un bot de gestion de temps de service conçu pour faciliter la vie des serveurs Roleplay.",
             color=config.BOT_COLOR
         )
         
         embed.add_field(name="📦 Version", value=f"`{config.BOT_VERSION}`", inline=True)
-        embed.add_field(name="🐍 Langage", value="`Python (discord.py)`", inline=True)
-        embed.add_field(name="💻 Développeur", value="matteohooliga", inline=True)
         
-        embed.add_field(
-            name="🔗 Liens Utiles", 
-            value=f"[📂 **Code Source (GitHub)**]({config.GITHUB_LINK})\n[🐛 Signaler un bug]({config.GITHUB_LINK}/issues)", 
-            inline=False
-        )
+        # MODIFICATION ICI : Affichage texte propre au lieu de la mention qui peut bugger
+        embed.add_field(name="💻 Développeur", value=f"matteohooliga\n`({config.OWNER_ID})`", inline=True)
         
-        embed.set_footer(text="Développé avec ❤️ pour la communauté RP.")
+        embed.add_field(name="🟢 Latence", value=f"`{round(self.bot.latency * 1000)}ms`", inline=True)
+        
+        links_value = f"• [📂 **Code Source (GitHub)**]({config.GITHUB_LINK})\n"
+        if "discord.gg" in config.SUPPORT_LINK:
+             links_value += f"• [🆘 **Serveur de Support**]({config.SUPPORT_LINK})"
+        
+        embed.add_field(name="🔗 Liens Utiles", value=links_value, inline=False)
+        
+        embed.set_footer(text=f"Développé avec ❤️ par matteohooliga")
         embed.timestamp = datetime.now()
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Code Source", url=config.GITHUB_LINK, style=discord.ButtonStyle.url))
+        if "discord.gg" in config.SUPPORT_LINK:
+            view.add_item(discord.ui.Button(label="Support Discord", url=config.SUPPORT_LINK, style=discord.ButtonStyle.url))
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     # --- COMMANDES DE SERVICE ---
 
