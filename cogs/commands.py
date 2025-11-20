@@ -16,17 +16,22 @@ class ServiceCommands(commands.Cog):
     def cog_unload(self):
         self.refresh_service.cancel()
 
-    @tasks.loop(seconds=1)
+    # --- BOUCLE DE RAFRAÎCHISSEMENT (10 secondes) ---
+    # Modification ici : 1s -> 10s pour éviter l'erreur 429 (Rate Limit)
+    @tasks.loop(seconds=10)
     async def refresh_service(self):
         try:
             configs = await self.db.get_all_guild_configs()
             for config_data in configs:
                 try:
                     guild_id = int(config_data['guild_id'])
+                    # On ne refresh que s'il y a des gens en service pour économiser l'API
                     active_sessions = await self.db.get_all_active_sessions(str(guild_id))
-                    if not active_sessions: continue
+                    if not active_sessions:
+                        continue
                     await self.bot.update_service_message(guild_id, config_data)
-                except Exception: continue
+                except Exception:
+                    continue
         except Exception as e:
             print(f"Erreur boucle refresh : {e}")
 
@@ -42,7 +47,7 @@ class ServiceCommands(commands.Cog):
                 choices.append(app_commands.Choice(name=f"🟢 {session['username']}", value=session['user_id']))
         return choices[:25]
 
-    # --- COMMANDES D'INFORMATION ---
+    # --- COMMANDES ---
 
     @app_commands.command(name="about", description="Afficher les informations et liens du bot")
     async def about_command(self, interaction: discord.Interaction):
@@ -54,10 +59,7 @@ class ServiceCommands(commands.Cog):
         )
         
         embed.add_field(name="📦 Version", value=f"`{config.BOT_VERSION}`", inline=True)
-        
-        # MODIFICATION ICI : Affichage texte propre au lieu de la mention qui peut bugger
         embed.add_field(name="💻 Développeur", value=f"matteohooliga\n`({config.OWNER_ID})`", inline=True)
-        
         embed.add_field(name="🟢 Latence", value=f"`{round(self.bot.latency * 1000)}ms`", inline=True)
         
         links_value = f"• [📂 **Code Source (GitHub)**]({config.GITHUB_LINK})\n"
@@ -75,8 +77,6 @@ class ServiceCommands(commands.Cog):
             view.add_item(discord.ui.Button(label="Support Discord", url=config.SUPPORT_LINK, style=discord.ButtonStyle.url))
         
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-
-    # --- COMMANDES DE SERVICE ---
 
     @app_commands.command(name="sum", description="Afficher vos statistiques de service")
     async def sum_command(self, interaction: discord.Interaction, user: discord.User = None):

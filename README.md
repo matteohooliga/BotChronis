@@ -11,32 +11,33 @@ Il offre une interface rapide, claire et fiable pour suivre l’activité d’un
 
 ### 🎮 **Pour les joueurs**
 
-* **Commencer**, **mettre en pause** et **terminer** un service.
-* Suivi automatique du temps total passé en service.
-* Statut visible en direct dans les embeds.
+- **Commencer**, **mettre en pause** et **terminer** un service.
+- Suivi automatique du temps total passé en service.
+- Statut visible en direct dans les embeds.
 
 ### 🛡️ **Pour les administrateurs**
 
-* **Clôturer** ou **annuler** le service d’un joueur.
-* **Ajouter** ou **retirer** du temps de service manuellement.
-* Contrôle simple et complet des données de service.
+- **Clôturer** ou **annuler** le service d’un joueur.
+- **Ajouter** ou **retirer** du temps de service manuellement.
+- Contrôle simple et complet des données de service.
 
 ### 📊 **Affichage & automatisation**
 
-* Vue rapide de **tous les joueurs actuellement en service**, avec leur temps actif.
-* **Rafraîchissement automatique toutes les 1000 ms**.
-* **Redémarrage automatique à 4h du matin** pour stabilité maximale.
+- Vue rapide de **tous les joueurs actuellement en service**, avec leur temps actif.
+- **Rafraîchissement automatique toutes les 10000 ms**.
+- **Redémarrage automatique à 4h du matin** pour stabilité maximale.
 
 ### 📝 **Logs personnalisables**
 
-* Système de **logs configurables** permettant de suivre clairement :
+- Système de **logs configurables** permettant de suivre clairement :
 
-  * les débuts de service
-  * les pauses
-  * les reprises
-  * les fins de service
-  * les modifications faites par les administrateurs
-* Idéal pour un historique propre et transparent.
+  - les débuts de service
+  - les pauses
+  - les reprises
+  - les fins de service
+  - les modifications faites par les administrateurs
+
+- Idéal pour un historique propre et transparent.
 
 ---
 
@@ -44,10 +45,10 @@ Il offre une interface rapide, claire et fiable pour suivre l’activité d’un
 
 Chronis est conçu pour les organisations RP nécessitant un suivi fiable :
 
-* Police / LSPD
-* Pompiers / EMS
-* Mécaniciens, taxi, sécurité
-* Divers Entreprises
+- Police / LSPD
+- Pompiers / EMS
+- Mécaniciens, taxi, sécurité
+- Divers Entreprises
 
 ---
 
@@ -66,32 +67,33 @@ It provides an efficient system to monitor the activity of any RP faction or org
 
 ### 🎮 **For Players**
 
-* **Start**, **pause**, and **end** their service.
-* Automatic tracking of total service duration.
-* Live service status displayed through embeds.
+- **Start**, **pause**, and **end** their service.
+- Automatic tracking of total service duration.
+- Live service status displayed through embeds.
 
 ### 🛡️ **For Administrators**
 
-* **Close** or **cancel** a player's service session.
-* **Add** or **remove** service time manually.
-* Full and easy control over service activity data.
+- **Close** or **cancel** a player's service session.
+- **Add** or **remove** service time manually.
+- Full and easy control over service activity data.
 
 ### 📊 **Display & Automation**
 
-* Quick overview of **all players currently on duty**, including their active time.
-* **Auto-refresh every 1000 ms** for real-time updates.
-* **Automatic restart at 4 AM** to ensure stability and uptime.
+- Quick overview of **all players currently on duty**, including their active time.
+- **Auto-refresh every 10000 ms** for real-time updates.
+- **Automatic restart at 4 AM** to ensure stability and uptime.
 
 ### 📝 **Customizable Logs**
 
-* Fully configurable logs providing clear tracking of:
+- Fully configurable logs providing clear tracking of:
 
-  * service starts
-  * pauses
-  * resumes
-  * service ends
-  * admin modifications
-* Perfect for clean and transparent action history.
+  - service starts
+  - pauses
+  - resumes
+  - service ends
+  - admin modifications
+
+- Perfect for clean and transparent action history.
 
 ---
 
@@ -99,11 +101,9 @@ It provides an efficient system to monitor the activity of any RP faction or org
 
 Chronis is ideal for any structured RP group, including:
 
-* Police / law enforcement
-* Fire / EMS
-* Mechanics, taxi, security, delivery services
-* Any faction with members who work in-service
-
-
+- Police / law enforcement
+- Fire / EMS
+- Mechanics, taxi, security, delivery services
+- Any faction with members who work in-service
 
 Tu veux que je complète ?
