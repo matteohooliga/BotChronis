@@ -1,7 +1,7 @@
 # Informations du bot
 BOT_NAME = "Chronis"
 BOT_COLOR = 0x00AFF4
-BOT_VERSION = "2.5.2"
+BOT_VERSION = "2.7.0"
 OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK ---
@@ -16,8 +16,14 @@ SUPPORT_LINK = ""
 EMBED_TITLE = "🔍 Utilisateur(s) en service"
 EMBED_DESCRIPTION_EMPTY = "Aucun utilisateur n'est en service… 😢"
 EMBED_SINCE = "• Depuis"
-# FOOTER UNIFIÉ
 EMBED_FOOTER = f"Chronis V{BOT_VERSION} | By matteohooliga"
+
+# Couleurs
+COLOR_GREEN = 0x008000 
+COLOR_BLUE = 0x3498DB
+COLOR_ORANGE = 0xFF9d00
+COLOR_RED = 0xF0000A
+THRESHOLD_LOW = 5
 
 # Boutons
 BUTTONS = {
@@ -29,30 +35,32 @@ BUTTONS = {
 # Traductions
 TRANSLATIONS = {
     "fr": {
-        # Boutons Généraux
+        # --- GENERAL ---
         "btn_invite": "Inviter le Bot", "btn_source": "Code Source", "btn_support": "Support",
         "btn_feedback": "Avis / Bug", "btn_refresh": "Actualiser",
-        
-        # Boutons Service
         "btn_start": "Démarrer", "btn_pause": "Pause / Reprise", "btn_stop": "Fin de service",
-        
-        # SETUP PANEL
-        "setup_panel_title": "🛠️ Panneau de Configuration",
-        "setup_panel_desc": "Utilisez les menus ci-dessous pour configurer Chronis.\nUne fois vos choix faits, cliquez sur **Valider**.",
-        "setup_ph_lang": "🌍 Choisir la langue",
-        "setup_ph_service": "📢 Choisir Salon Service",
-        "setup_ph_logs": "📜 Choisir Salon Logs",
-        "setup_ph_role": "👔 Choisir Rôle Direction",
-        "setup_btn_save": "Valider la configuration",
-        "setup_err_no_service": "❌ Erreur : Vous devez sélectionner un salon pour le Service !",
-        "setup_success": "✅ **Configuration sauvegardée !**\nLe panneau a été envoyé dans {channel}.",
-        "setup_complete": "✅ **Configuration terminée**",
-        "setup_logs": "\nLogs configurés dans {channel}.",
-        "log_setup_title": "✅ Configuration des Logs",
-        "log_setup_desc": "Ce salon recevra les logs du bot Chronis.",
-        "setup_role": "\nRôle Direction configuré : {role}.",
+        "btn_next": "Page Suivante >>", "btn_prev": "<< Page Précédente",
 
-        # Messages Service
+        # --- SETUP PANEL ---
+        "setup_panel_title": "🛠️ Panneau de Configuration",
+        "setup_panel_desc": "Configurez Chronis via les menus ci-dessous. Cliquez **Valider** lorsque vous avez terminé.",
+        "setup_ph_lang": "🌍 Choisir la langue",
+        "setup_ph_service": "📢 Salon Service (Actuel : {val})",
+        "setup_ph_logs": "📜 Salon Logs (Actuel : {val})",
+        "setup_ph_role": "👔 Rôle Direction (Actuel : {val})",
+        "setup_ph_autorole": "🏆 Rôle Auto (Actuel : {val})",
+        "setup_ph_goal": "🎯 Objectif Hebdo",
+        "setup_btn_save": "Valider",
+        "setup_err_no_service": "❌ Erreur : Salon Service requis !",
+        "setup_success": "✅ **Sauvegardé !**\nPanneau envoyé dans {channel}.",
+        "setup_complete": "✅ Config Terminée",
+        "setup_logs": "\nLogs activés.",
+        "log_setup_title": "✅ Logs Config",
+        "log_setup_desc": "Ce salon recevra les logs.",
+        "setup_role": "\nRôle Direction : {role}.",
+        "setup_val_none": "Aucun",
+
+        # --- SERVICE ---
         "service_started": "✅ **Service démarré** !",
         "service_already_started": "⚠️ Vous êtes déjà en service !",
         "service_paused": "⏸️ **Pause démarrée** !",
@@ -65,171 +73,210 @@ TRANSLATIONS = {
         "embed_empty": "Aucun utilisateur n'est en service… 😢",
         "embed_since": "• Depuis",
 
-        # Stats
+        # --- STATS ---
         "stats_title": "📊 Statistiques de {name}",
         "stats_no_data": "Aucune donnée.",
-        "global_title": "📊 Statistiques Globales – {guild}",
+        "global_title": "📊 Classement Global",
         "stats_fields": ["Sessions", "Temps total", "Moyenne", "Max", "Min"],
-        "global_fields": ["Total sessions", "Temps cumulé", "Utilisateurs"],
-
-        # Logs Titres
-        "log_force_close": "🔧 Service Fermé (Force)",
-        "log_edit_time": "📈 Temps Modifié",
-        "log_reset": "⚠️ Réinitialisation Totale",
-        "log_cancel": "🗑️ Service Annulé",
-        "log_remove": "👤 Utilisateur Supprimé",
-        "log_maint_title": "🔄 Maintenance Quotidienne",
-        "log_maint_desc": "Redémarrage automatique.",
+        "global_fields": ["Total Sessions", "Temps Cumulé", "Utilisateurs"],
+        "goal_warning_title": "🚨 OBJECTIF NON ATTEINT",
+        "goal_warning_desc": "Temps < Objectif ({goal}).",
         
-        # Actions / Edit Time
-        "time_added": "ajouté", "time_removed": "retiré", "new_total": "Nouveau total",
-        "edit_success": "✅ Temps modifié pour {user}.\n**{action}** : {value}\n**Nouveau Total** : {new_total}",
-        
-        # Feedback
-        "feedback_modal_title": "Envoyer un Feedback",
-        "feedback_subject": "Sujet / Bug",
-        "feedback_label": "Détails",
-        "feedback_placeholder": "Expliquez votre idée ou le bug...",
-        "feedback_sent": "✅ Merci ! Retour transmis.",
-        "feedback_error": "❌ Erreur envoi feedback.",
-        "log_new_feedback": "📨 Nouveau Feedback",
-        "fb_select_placeholder": "Type de retour...",
-        "fb_opt_review": "Avis ⭐", "fb_opt_bug": "Bug 🐛",
-        "fb_review_title": "⭐ Laisser un avis", "fb_review_subject": "Titre", "fb_review_rating": "Note (1-5)", "fb_review_comment": "Commentaire", "fb_log_review_title": "⭐ Avis Reçu", "fb_field_rating": "Note",
-        "fb_bug_title": "🐛 Signaler un Bug", "fb_bug_subject": "Titre", "fb_bug_desc": "Description", "fb_bug_media": "Lien image (Optionnel)", "fb_log_bug_title": "🐛 Bug Reçu", "fb_field_media": "Preuve",
+        # --- DETAILS ---
+        "det_title": "📄 Rapport Détaillé : {user}",
+        "det_stats": "📊 Statistiques",
+        "det_history": "📜 Historique Récent",
+        "det_type_service": "🟢 Service",
+        "det_type_adjust": "🔧 Ajustement Admin",
 
-        # Absence
-        "abs_modal_title": "Déclarer une absence",
-        "abs_start_label": "Début (JJ/MM/AAAA)",
-        "abs_end_label": "Fin (JJ/MM/AAAA)",
-        "abs_reason_label": "Raison",
-        "abs_embed_title": "📅 Absence de {user}",
-        "abs_field_dates": "Dates", "abs_field_duration": "Durée", "abs_field_reason": "Raison",
-        "abs_error_format": "❌ Date invalide (JJ/MM/AAAA).",
-        "abs_error_logic": "❌ Fin avant début.",
+        # --- EDIT TIME ---
+        "edit_success": "✅ Temps modifié pour {user}.",
+        "edit_desc": "Le temps de service de {user} a été modifié manuellement.",
+        "edit_field_action": "Action",
+        "edit_field_amount": "Montant",
+        "edit_field_new_total": "Nouveau Total",
+        "edit_field_old": "Ancien Total",
+        "edit_field_admin": "Modérateur",
+        "edit_field_target": "Cible",
+        "time_added": "Ajout (+)", 
+        "time_removed": "Retrait (-)",
+        "et_view_title": "⏱️ Modification de Temps",
+        "et_view_desc": "Que souhaitez-vous faire pour le temps de service de {user} ?",
+        "et_btn_add": "Ajouter (+)",
+        "et_btn_remove": "Retirer (-)",
+        "et_modal_add": "Ajouter du temps",
+        "et_modal_remove": "Retirer du temps",
+        "et_label_hours": "Heures",
+        "et_label_minutes": "Minutes",
+        "et_label_seconds": "Secondes",
+        "et_placeholder": "0",
 
-        # Help
-        "help_title": "📚 Menu d'Aide",
-        "help_desc": "Sélectionnez une catégorie.",
-        "help_cat_user": "👤 Utilisateur", "help_cat_admin": "🛡️ Admin", "help_back": "⬅️ Retour", "help_back_lang": "🌍 Langues",
-        "help_user_desc": "**Pour tous :**", "help_admin_desc": "**Pour le staff :**",
-        "help_cmds_user": "• `/sum` : Stats perso.\n• `/sumall` : Classement.\n• `/about` : Infos.\n• `/feedback` : Avis/Bug.\n• `/absence` : Absence.",
-        "help_cmds_admin": "• `/presence` : Liste agents.\n• `/details` : Historique.\n• `/close` : Fin forcée.\n• `/edittime` : Modif temps.\n• `/cancel` : Annuler.\n• `/remove_user` : Suppr user.\n• `/reset_server` : Reset.\n• `/setup` : Configurer.",
+        # --- ADMIN PAUSE ---
+        "admin_pause_success": "⏸️ Le service de {user} a été mis en pause par un administrateur.",
+        "admin_resume_success": "▶️ Le service de {user} a été relancé par un administrateur.",
+        "log_admin_pause_title": "⏸️ Pause Forcée",
+        "log_admin_resume_title": "▶️ Reprise Forcée",
 
-        # System Logs (NEW for +start/+stop)
-        "cmd_restart_end": "✅ **Redémarrage terminé !**",
-        "log_stat_done": "Terminé ✅",
-        "log_footer_done": "Fini le {date}",
+        # --- MAINTENANCE ---
+        "maint_embed_title": "🚧 MAINTENANCE EN COURS",
+        "maint_embed_desc": "Le système est temporairement verrouillé pour maintenance.\nLes prises de service sont impossibles.",
+        "maint_enabled": "🟠 **Mode Maintenance ACTIVÉ**.\nL'embed a été mis à jour et les boutons sont bloqués.",
+        "maint_disabled": "🟢 **Mode Maintenance DÉSACTIVÉ**.\nRetour à la normale.",
+        "maint_block_msg": "⛔ **Maintenance** : Le système est verrouillé.",
+
+        # --- LOGS ---
+        "log_start_title": "🟢 Prise de Service", "log_start_desc": "L'agent {user} a pris son service.",
+        "log_pause_title": "⏸️ Mise en Pause", "log_pause_desc": "L'agent {user} s'est mis en pause.",
+        "log_resume_title": "▶️ Reprise de Service", "log_resume_desc": "L'agent {user} a repris son service.",
+        "log_stop_title": "🛑 Fin de Service", "log_stop_desc": "L'agent {user} a terminé son service.",
+        "log_force_close": "🔧 Fermeture Forcée", "log_edit_time": "📈 Temps Modifié",
+        "log_reset": "⚠️ Reset Total", "log_cancel": "🗑️ Annulation", "log_remove": "👤 User Supprimé", 
+        "log_autorole": "🏆 Rôle Auto", "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Redémarrage auto.",
+        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Arrêt manuel.",
+        "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Bot en ligne.",
         
-        "log_bot_stop_title": "🛑 Arrêt du Bot",
-        "log_bot_stop_desc": "Le bot a été éteint manuellement par un administrateur.",
-        "log_bot_start_title": "🟢 Démarrage du Bot",
-        "log_bot_start_desc": "Le bot est de nouveau en ligne.",
-        
+        # --- ADMIN COMMANDS ---
         "cmd_sync_start": "⏳ **Synchronisation en cours...**",
         "cmd_sync_end": "✅ **Synchronisation terminée !** ({count} commandes)",
-        "log_sync_title": "🔄 Synchronisation Commandes",
-        "log_sync_desc": "Mise à jour effectuée par {user}.",
         "cmd_restart_start": "👋 **Redémarrage en cours...**",
-        "log_restart_title": "🔄 Redémarrage Manuel",
-        "log_restart_desc": "Déclenché par {user}.",
-        "log_stat_wip": "En cours... ⏳"
+        "cmd_restart_end": "✅ **Redémarrage terminé !**",
+        "log_sync_title": "🔄 Sync", "log_sync_desc": "Par {user}.",
+        "log_restart_title": "🔄 Restart", "log_restart_desc": "Par {user}.",
+        "log_stat_wip": "En cours...", "log_stat_done": "Terminé",
+        "log_footer_done": "Fini le {date}",
+        
+        # --- FEEDBACK ---
+        "feedback_modal_title": "Feedback", "feedback_subject": "Sujet", "feedback_label": "Message",
+        "feedback_placeholder": "Détails...", "feedback_sent": "✅ Envoyé !", "feedback_error": "❌ Erreur.",
+        "log_new_feedback": "📨 Feedback", "fb_select_placeholder": "Type...", "fb_opt_review": "Avis", "fb_opt_bug": "Bug",
+        "fb_review_title": "Avis", "fb_review_subject": "Titre", "fb_review_rating": "Note (1-5)", "fb_review_comment": "Commentaire",
+        "fb_log_review_title": "⭐ Avis Reçu", "fb_field_rating": "Note",
+        "fb_bug_title": "Bug", "fb_bug_subject": "Titre", "fb_bug_desc": "Description", "fb_bug_media": "Lien image",
+        "fb_log_bug_title": "🐛 Bug Reçu", "fb_field_media": "Preuve",
+
+        # --- ABSENCE ---
+        "abs_modal_title": "Déclarer une absence", 
+        "abs_start_label": "Début", "abs_start_ph": "JJ/MM/AAAA",
+        "abs_end_label": "Fin", "abs_end_ph": "JJ/MM/AAAA",
+        "abs_reason_label": "Raison", "abs_reason_ph": "Motif...",
+        "abs_embed_title": "📅 Absence de {user}", 
+        "abs_field_dates": "Dates", "abs_field_duration": "Durée", "abs_field_reason": "Raison", 
+        "abs_error_format": "❌ Date invalide.", "abs_error_logic": "❌ Fin < Début.",
+        "abs_user_field": "👤 Agent",
+
+        # --- HELP ---
+        "help_title": "📚 Aide", "help_desc": "Choisir une catégorie.", "help_cat_user": "👤 Utilisateurs", "help_cat_admin": "🛡️ Administrateur",
+        "help_back": "⬅️ Retour", "help_back_lang": "🌍 Langues",
+        "help_user_desc": "Commandes publiques :", "help_admin_desc": "Commandes staff :",
+        
+        "help_cmds_user": (
+            "**• `/sum`**\n└ Affiche vos statistiques personnelles.\n"
+            "**• `/sumall`**\n└ Affiche le classement général du serveur.\n"
+            "**• `/absence`**\n└ Formulaire pour déclarer une absence.\n"
+            "**• `/feedback`**\n└ Envoyer un avis ou un bug.\n"
+            "**• `/about`**\n└ Informations du bot."
+        ),
+        
+        "help_cmds_admin": (
+            "**• `/presence`**\n└ Liste instantanée des agents en service.\n"
+            "**• `/details [joueur]`**\n└ Historique détaillé d'un agent.\n"
+            "**• `/pause [joueur]`**\n└ Mettre en pause/reprendre un service.\n"
+            "**• `/close [joueur]`**\n└ Forcer la fin de service d'un agent.\n"
+            "**• `/edittime`**\n└ Corriger manuellement le temps.\n"
+            "**• `/cancel [joueur]`**\n└ Annuler une session (suppression).\n"
+            "**• `/remove_user`**\n└ Supprimer toutes les données d'un joueur.\n"
+            "**• `/reset_server`**\n└ Réinitialisation (Hebdo/Mensuel).\n"
+            "**• `/auto_role`**\n└ Attribuer les rôles auto.\n"
+            "**• `/setup`**\n└ Panneau de configuration."
+        ),
+        
+        # --- ERREURS ---
+        "error_generic": "❌ Erreur système.", "error_perms": "⛔ Permission refusée.", "error_admin_only": "⛔ Admin seulement.",
+        "error_invalid_input": "❌ Saisie invalide.", "error_db": "⚠️ Erreur DB.", "error_no_role": "⚠️ Pas de rôle auto.",
+        "role_added": "✅ Rôle {role} ajouté à {user}."
     },
     "en": {
-        "btn_invite": "Invite Bot", "btn_source": "Source Code", "btn_support": "Support",
-        "btn_feedback": "Feedback", "btn_refresh": "Refresh",
-        "btn_start": "Start Service", "btn_pause": "Pause / Resume", "btn_stop": "End Service",
+        # (Version EN)
+        "btn_invite": "Invite", "btn_source": "Source", "btn_support": "Support", "btn_feedback": "Feedback", "btn_refresh": "Refresh",
+        "btn_start": "Start", "btn_pause": "Pause", "btn_stop": "Stop", "btn_next": "Next >>", "btn_prev": "<< Prev",
         
-        "setup_panel_title": "🛠️ Configuration Panel",
-        "setup_panel_desc": "Use menus below to configure Chronis.\nClick **Validate** when done.",
-        "setup_ph_lang": "🌍 Select Language",
-        "setup_ph_service": "📢 Select Service Channel",
-        "setup_ph_logs": "📜 Select Logs Channel",
-        "setup_ph_role": "👔 Select Direction Role",
-        "setup_btn_save": "Save Configuration",
-        "setup_err_no_service": "❌ Error: Service Channel is required!",
-        "setup_success": "✅ **Configuration saved!**\nPanel sent to {channel}.",
-        "setup_complete": "✅ **Setup complete**",
-        "setup_logs": "\nLogs enabled in {channel}.",
-        "log_setup_title": "✅ Logs Configured",
-        "log_setup_desc": "This channel will receive logs.",
-        "setup_role": "\nDirection role: {role}.",
-
-        "service_started": "✅ **Service started** !",
-        "service_already_started": "⚠️ You are already on duty!",
-        "service_paused": "⏸️ **Paused** !",
-        "service_resumed": "▶️ **Resumed** !",
-        "service_not_started": "⚠️ You must start service first!",
-        "service_stopped": "🛑 **Service ended** !\n\n**Total** : {duration}\n**Pause** : {pause}\n**Effective** : {effective}",
-        "service_forced_stop": "🔧 **Force closed by admin** for {user}.\n**Duration** : {duration}",
-        "no_active_session": "❌ No active session.",
-
-        "embed_title": "🔍 Users on Duty",
-        "embed_empty": "No users on duty… 😢",
-        "embed_since": "• Since",
-
-        "stats_title": "📊 Statistics for {name}",
-        "stats_no_data": "No data.",
-        "global_title": "📊 Global Stats – {guild}",
-        "stats_fields": ["Sessions", "Total Time", "Average", "Max", "Min"],
-        "global_fields": ["Total Sessions", "Cumulative Time", "Users"],
-
-        "log_force_close": "🔧 Force Close",
-        "log_edit_time": "📈 Time Edited",
-        "log_reset": "⚠️ Total Reset",
-        "log_cancel": "🗑️ Cancelled",
-        "log_remove": "👤 User Deleted",
-        "log_maint_title": "🔄 Daily Maintenance",
-        "log_maint_desc": "Auto restart.",
-
-        "time_added": "added", "time_removed": "removed", "new_total": "New Total",
-        "edit_success": "✅ Edited for {user}.\n**{action}** : {value}\n**New Total** : {new_total}",
+        "setup_panel_title": "🛠️ Config", "setup_panel_desc": "Configure below.", "setup_ph_lang": "🌍 Language",
+        "setup_ph_service": "📢 Service Channel", "setup_ph_logs": "📜 Logs Channel", "setup_ph_role": "👔 Direction Role",
+        "setup_ph_goal": "🎯 Goal", "setup_ph_autorole": "🏆 Auto Role", "setup_btn_save": "Save",
+        "setup_err_no_service": "❌ Service Channel required!", "setup_success": "✅ Saved!", "log_setup_title": "✅ Logs Config",
+        "log_setup_desc": "Logs enabled.", "setup_complete": "✅ Setup Complete", "setup_logs": "\nLogs active.", "setup_role": "\nRole: {role}.", "setup_val_none": "None",
         
-        "feedback_modal_title": "Send Feedback",
-        "feedback_subject": "Subject / Bug",
-        "feedback_label": "Details",
-        "feedback_placeholder": "Explain...",
-        "feedback_sent": "✅ Sent!",
-        "feedback_error": "❌ Error sending.",
-        "log_new_feedback": "📨 New Feedback",
-        "fb_select_placeholder": "Select type...",
-        "fb_opt_review": "Review ⭐", "fb_opt_bug": "Bug 🐛",
-        "fb_review_title": "⭐ Review", "fb_review_subject": "Title", "fb_review_rating": "Rating", "fb_review_comment": "Comment", "fb_log_review_title": "⭐ New Review", "fb_field_rating": "Rating",
-        "fb_bug_title": "🐛 Bug Report", "fb_bug_subject": "Title", "fb_bug_desc": "Description", "fb_bug_media": "Image Link", "fb_log_bug_title": "🐛 Bug Report", "fb_field_media": "Proof",
+        "service_started": "✅ Started!", "service_already_started": "⚠️ Active!", "service_paused": "⏸️ Paused!",
+        "service_resumed": "▶️ Resumed!", "service_not_started": "⚠️ Not started!", "service_stopped": "🛑 Ended!\nTotal: {duration}",
+        "service_forced_stop": "🔧 Forced Stop.", "no_active_session": "❌ No session.",
+        "embed_title": "🔍 Users on Duty", "embed_empty": "No users...", "embed_since": "• Since",
 
-        "abs_modal_title": "Declare Absence",
-        "abs_start_label": "Start (DD/MM/YYYY)",
-        "abs_end_label": "End (DD/MM/YYYY)",
-        "abs_reason_label": "Reason",
-        "abs_embed_title": "📅 Absence: {user}",
-        "abs_field_dates": "Dates", "abs_field_duration": "Duration", "abs_field_reason": "Reason",
-        "abs_error_format": "❌ Invalid date.",
-        "abs_error_logic": "❌ End before Start.",
-
-        "help_title": "📚 Help Menu",
-        "help_desc": "Select a category.",
-        "help_cat_user": "👤 User", "help_cat_admin": "🛡️ Admin", "help_back": "⬅️ Back", "help_back_lang": "🌍 Languages",
-        "help_user_desc": "**For everyone:**", "help_admin_desc": "**For staff:**",
-        "help_cmds_user": "• `/sum` : Stats.\n• `/sumall` : Leaderboard.\n• `/about` : Info.\n• `/feedback` : Feedback.\n• `/absence` : Absence.",
-        "help_cmds_admin": "• `/presence` : List.\n• `/details` : History.\n• `/close` : Force close.\n• `/edittime` : Edit time.\n• `/cancel` : Cancel.\n• `/remove_user` : Delete user.\n• `/reset_server` : Reset.\n• `/setup` : Config.",
-
-        "cmd_restart_end": "✅ **Restart complete!**",
-        "log_stat_done": "Done ✅",
-        "log_footer_done": "Finished on {date}",
-
-        "log_bot_stop_title": "🛑 Bot Stopped",
-        "log_bot_stop_desc": "Bot was manually shut down by an administrator.",
-        "log_bot_start_title": "🟢 Bot Started",
-        "log_bot_start_desc": "Bot is back online.",
+        "stats_title": "📊 Stats: {name}", "stats_no_data": "No data.", "global_title": "📊 Leaderboard",
+        "stats_fields": ["Sessions", "Total", "Avg", "Max", "Min"], "global_fields": ["Sessions", "Total Time", "Users"],
+        "goal_warning_title": "🚨 GOAL MISSED", "goal_warning_desc": "Under {goal}.",
         
-        "cmd_sync_start": "⏳ **Sync in progress...**",
-        "cmd_sync_end": "✅ **Sync complete!** ({count} commands)",
-        "log_sync_title": "🔄 Commands Sync",
-        "log_sync_desc": "Update triggered by {user}.",
-        "cmd_restart_start": "👋 **Restarting...**",
-        "log_restart_title": "🔄 Manual Restart",
-        "log_restart_desc": "Triggered by {user}.",
-        "log_stat_wip": "In progress... ⏳"
+        "det_title": "📄 Report: {user}", "det_stats": "📊 Stats", "det_history": "📜 History", "det_type_service": "🟢 Service",
+        "det_type_adjust": "🔧 Adjustment",
+        
+        "edit_title": "⏱️ Time Edited", "edit_success": "✅ Edited for {user}.", "edit_desc": "Manual adjustment.",
+        "edit_field_action": "Action", "edit_field_amount": "Amount", "edit_field_new_total": "New Total",
+        "edit_field_old": "Old Total", "edit_field_admin": "Admin", "edit_field_target": "User",
+        "time_added": "Added (+)", "time_removed": "Removed (-)",
+        "et_view_title": "⏱️ Edit Time", "et_view_desc": "Choose action for {user}.", "et_btn_add": "Add (+)", "et_btn_remove": "Remove (-)",
+        "et_modal_add": "Add Time", "et_modal_remove": "Remove Time", "et_label_hours": "Hours", "et_label_minutes": "Minutes", "et_label_seconds": "Seconds", "et_placeholder": "0",
+        
+        "admin_pause_success": "⏸️ Paused by admin.", "admin_resume_success": "▶️ Resumed by admin.", "log_admin_pause_title": "⏸️ Forced Pause", "log_admin_resume_title": "▶️ Forced Resume",
+
+        "log_force_close": "🔧 Force Close", "log_edit_time": "📈 Time Edited", "log_reset": "⚠️ Reset", "log_cancel": "🗑️ Cancelled",
+        "log_remove": "👤 User Deleted", "log_autorole": "🏆 Role Added", 
+        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Manual stop.", "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Online.",
+        "log_start_title": "🟢 Service Start", "log_start_desc": "Agent {user} started service.", "log_pause_title": "⏸️ Pause", "log_pause_desc": "Agent {user} paused.",
+        "log_resume_title": "▶️ Resume", "log_resume_desc": "Agent {user} resumed.", "log_stop_title": "🛑 Service End", "log_stop_desc": "Agent {user} ended service.",
+        "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Auto restart.",
+        "maint_embed_title": "🚧 MAINTENANCE", "maint_embed_desc": "System locked.", "maint_enabled": "🟠 **Maintenance ON**.", "maint_disabled": "🟢 **Maintenance OFF**.", "maint_block_msg": "⛔ **Maintenance** : Locked.",
+
+        "cmd_sync_start": "⏳ Syncing...", "cmd_sync_end": "✅ Synced.", "cmd_restart_start": "👋 Restarting...", "cmd_restart_end": "✅ Online.",
+        "log_sync_title": "🔄 Sync", "log_restart_title": "🔄 Restart", "log_sync_desc": "By {user}.", "log_restart_desc": "By {user}.",
+        "log_stat_wip": "WIP...", "log_stat_done": "Done", "log_footer_done": "Done at {date}",
+
+        "feedback_modal_title": "Feedback", "feedback_subject": "Subject", "feedback_label": "Details", "feedback_placeholder": "...",
+        "feedback_sent": "✅ Sent!", "feedback_error": "❌ Error.", "log_new_feedback": "📨 Feedback", "fb_select_placeholder": "Type...",
+        "fb_opt_review": "Review", "fb_opt_bug": "Bug", "fb_review_title": "Review", "fb_bug_title": "Bug",
+        "fb_field_rating": "Rating", "fb_field_media": "Proof",
+        
+        "abs_modal_title": "Absence", "abs_start_label": "Start", "abs_end_label": "End", "abs_reason_label": "Reason",
+        "abs_start_ph": "DD/MM/YYYY", "abs_end_ph": "DD/MM/YYYY", "abs_reason_ph": "Reason...",
+        "abs_embed_title": "📅 Absence: {user}", "abs_field_dates": "Dates", "abs_field_duration": "Duration", "abs_field_reason": "Reason",
+        "abs_error_format": "❌ Bad Date.", "abs_error_logic": "❌ End < Start.", "abs_user_field": "👤 Agent",
+
+        "help_title": "📚 Help", "help_desc": "Select category.", "help_cat_user": "👤 Users", "help_cat_admin": "🛡️ Administrator",
+        "help_back": "⬅️ Back", "help_back_lang": "🌍 Language",
+        
+        "help_user_desc": "**Public:**", 
+        "help_cmds_user": (
+            "• `/sum`\n  └ Stats.\n"
+            "• `/sumall`\n  └ Leaderboard.\n"
+            "• `/about`\n  └ Info.\n"
+            "• `/feedback`\n  └ Report.\n"
+            "• `/absence`\n  └ Absence."
+        ),
+        
+        "help_admin_desc": "**Staff:**",
+        "help_cmds_admin": (
+            "• `/presence`\n  └ Live list.\n"
+            "• `/details`\n  └ History.\n"
+            "• `/close`\n  └ Force close.\n"
+            "• `/edittime`\n  └ Edit time.\n"
+            "• `/cancel`\n  └ Cancel session.\n"
+            "• `/remove_user`\n  └ Delete user.\n"
+            "• `/reset_server`\n  └ Reset.\n"
+            "• `/setup`\n  └ Config.\n"
+            "• `/auto_role`\n  └ Auto Role.\n"
+            "• `/pause`\n  └ Force pause."
+        ),
+        
+        "error_generic": "❌ Error.", "error_perms": "⛔ Denied.", "error_admin_only": "⛔ Admin only.", "error_invalid_input": "❌ Invalid.",
+        "error_db": "⚠️ DB Error.", "error_no_role": "⚠️ No role.", "role_added": "✅ Role added."
     }
 }
 

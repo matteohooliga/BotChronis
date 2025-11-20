@@ -106,7 +106,8 @@ class ChronosBot(commands.Bot):
         try:
             total = await self.db.get_total_active_sessions_count()
             ping = round(self.latency * 1000)
-            await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{total} active | {ping}ms | /about"))
+            status_text = f"{total} active | {ping}ms | /about"
+            await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status_text))
         except: pass
 
     @tasks.loop(seconds=30)
@@ -126,7 +127,7 @@ class ChronosBot(commands.Bot):
             if fields:
                 for name, value in fields: embed.add_field(name=name, value=value, inline=True)
             embed.timestamp = datetime.datetime.now()
-            embed.set_footer(text=config.EMBED_FOOTER)
+            embed.set_footer(text="Chronis Logs")
             return await log_channel.send(embed=embed)
         except: return None
 
@@ -165,9 +166,13 @@ class ChronosBot(commands.Bot):
             channel = self.get_channel(int(config_data['channel_id']))
             if not channel: return
             active = await self.db.get_all_active_sessions(str(guild_id))
+            
+            # Vérif Maintenance
+            is_maint = config_data.get('is_maintenance') == 1
+            
             from utils import create_service_embed
             lang = config_data.get('language', 'fr')
-            embed = create_service_embed(active, channel.guild, lang)
+            embed = create_service_embed(active, channel.guild, lang, is_maint)
             message = channel.get_partial_message(int(config_data['message_id']))
             await message.edit(embed=embed)
         except: pass
@@ -221,15 +226,31 @@ def main():
         await bot.close()
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
-    # --- NOUVELLE COMMANDE STOP ---
+    # --- COMMANDE MAINTENANCE (Owner) ---
     @bot.command()
-    @commands.is_owner() # Seulement vous
-    async def stop(ctx):
-        """Arrête le bot proprement avec logs"""
+    @commands.is_owner()
+    async def maintenance(ctx):
+        """Active/Désactive la maintenance"""
         import config as cfg
-        await ctx.send("🛑 **Arrêt en cours...**")
+        conf = await bot.db.get_guild_config(ctx.guild.id)
+        if not conf: return await ctx.send("❌ Configurez le bot d'abord !")
         
-        # Envoi des logs sur tous les serveurs
+        current = conf.get('is_maintenance', 0)
+        new_state = 0 if current else 1
+        
+        await bot.db.set_maintenance(str(ctx.guild.id), new_state)
+        await bot.update_service_message(ctx.guild.id)
+        
+        lang = await bot.get_guild_lang(ctx.guild.id)
+        txt = cfg.TRANSLATIONS[lang]
+        msg = txt['maint_enabled'] if new_state else txt['maint_disabled']
+        await ctx.send(msg)
+
+    @bot.command()
+    @commands.is_owner()
+    async def stop(ctx):
+        import config as cfg
+        await ctx.send("🛑")
         try:
             configs = await bot.db.get_all_guild_configs()
             for conf in configs:
@@ -238,18 +259,14 @@ def main():
                     l_txt = cfg.TRANSLATIONS[l_lang]
                     await bot.send_log(int(conf['guild_id']), l_txt['log_bot_stop_title'], l_txt['log_bot_stop_desc'], discord.Color.red())
         except: pass
-        
         await bot.close()
-        # On ne relance pas le script, on quitte pour de bon
         sys.exit(0)
 
-    # --- NOUVELLE COMMANDE START (A utiliser après un allumage manuel) ---
     @bot.command()
     @commands.is_owner()
     async def start(ctx):
-        """Envoie un signal de démarrage dans les logs"""
         import config as cfg
-        await ctx.send("🟢 **Signal de démarrage envoyé.**")
+        await ctx.send("🟢")
         try:
             configs = await bot.db.get_all_guild_configs()
             for conf in configs:
