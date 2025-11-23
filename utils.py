@@ -25,16 +25,13 @@ def get_dynamic_color(active_sessions: list) -> int:
 
 def create_service_embed(active_sessions: list, guild: discord.Guild, lang: str = 'fr', maintenance: bool = False) -> discord.Embed:
     texts = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
-    
     if maintenance:
         embed = discord.Embed(title=texts['maint_embed_title'], description=texts['maint_embed_desc'], color=config.COLOR_ORANGE)
         embed.set_footer(text=config.EMBED_FOOTER)
         embed.timestamp = datetime.now()
         return embed
-
     color = get_dynamic_color(active_sessions)
     embed = discord.Embed(title=f"{texts['embed_title']} – ({len(active_sessions)})", color=color)
-    
     if not active_sessions:
         embed.description = texts['embed_empty']
     else:
@@ -49,7 +46,6 @@ def create_service_embed(active_sessions: list, guild: discord.Guild, lang: str 
                 if session['is_paused'] and session['pause_start']: elapsed -= (now - session['pause_start'])
                 user_list.append(f"{status_icon} {user.mention} {texts['embed_since']} {start_time} • `{format_duration(elapsed)}`")
         embed.description = "\n".join(user_list)
-    
     embed.set_footer(text=config.EMBED_FOOTER)
     embed.timestamp = datetime.now()
     return embed
@@ -57,7 +53,6 @@ def create_service_embed(active_sessions: list, guild: discord.Guild, lang: str 
 def create_stats_embed(stats: Dict[str, Any], user: discord.User, lang: str = 'fr', goal_ms: int = 0) -> discord.Embed:
     texts = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
     embed = discord.Embed(title=texts['stats_title'].format(name=user.display_name), color=config.BOT_COLOR)
-    
     total_ms = stats['total_time'] or 0
     if goal_ms > 0 and total_ms < goal_ms:
         embed.description = f"**{texts['goal_warning_title']}**\n{texts['goal_warning_desc'].format(goal=format_duration(goal_ms))}\n\n"
@@ -65,34 +60,29 @@ def create_stats_embed(stats: Dict[str, Any], user: discord.User, lang: str = 'f
     elif not stats or stats['total_sessions'] == 0:
         embed.description = texts['stats_no_data']
         return embed
-    
     fields = texts['stats_fields']
     embed.add_field(name=fields[0], value=f"`{stats['total_sessions']}`", inline=True)
     embed.add_field(name=fields[1], value=f"`{format_duration(total_ms)}`", inline=True)
     embed.add_field(name=fields[2], value=f"`{format_duration(stats['avg_time'] or 0)}`", inline=True)
     embed.add_field(name=fields[3], value=f"`{format_duration(stats['max_time'] or 0)}`", inline=True)
     embed.add_field(name=fields[4], value=f"`{format_duration(stats['min_time'] or 0)}`", inline=True)
-    
     if user.display_avatar: embed.set_thumbnail(url=user.display_avatar.url)
     embed.set_footer(text=config.EMBED_FOOTER)
     embed.timestamp = datetime.now()
     return embed
 
-def create_all_stats_embed(all_stats: list, guild: discord.Guild, lang: str = 'fr', page: int = 1) -> (discord.Embed, int):
+def create_all_stats_embed(all_stats: list, guild: discord.Guild, lang: str = 'fr', page: int = 1, goal_ms: int = 0) -> (discord.Embed, int):
     texts = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
     ITEMS_PER_PAGE = 10
     total_pages = math.ceil(len(all_stats) / ITEMS_PER_PAGE)
     if total_pages == 0: total_pages = 1
-    
     start_idx = (page - 1) * ITEMS_PER_PAGE
     end_idx = start_idx + ITEMS_PER_PAGE
     current_stats = all_stats[start_idx:end_idx]
-
     embed = discord.Embed(title=texts['global_title'].format(guild=guild.name), color=config.BOT_COLOR)
     if not all_stats:
         embed.description = texts['stats_no_data']
         return embed, 1
-    
     lines = []
     for i, s in enumerate(current_stats, start_idx + 1):
         try:
@@ -100,20 +90,29 @@ def create_all_stats_embed(all_stats: list, guild: discord.Guild, lang: str = 'f
             name = user.mention if user else s['username']
         except: name = s['username']
         medal = "🥇 " if i==1 else "🥈 " if i==2 else "🥉 " if i==3 else ""
-        lines.append(f"{medal}**{i}.** {name} • `{format_duration(s['total_time'] or 0)}`")
-    
+        warning = " ⚠️" if (goal_ms > 0 and (s['total_time'] or 0) < goal_ms) else ""
+        lines.append(f"{medal}**{i}.** {name} • `{format_duration(s['total_time'] or 0)}`{warning}")
     embed.description = "\n".join(lines)
-    
     fields = texts['global_fields']
     total_s = sum(s['total_sessions'] for s in all_stats)
     total_t = sum(s['total_time'] or 0 for s in all_stats)
     embed.add_field(name=fields[0], value=f"`{total_s}`", inline=True)
     embed.add_field(name=fields[1], value=f"`{format_duration(total_t)}`", inline=True)
     embed.add_field(name=fields[2], value=f"`{len(all_stats)}`", inline=True)
-
     embed.set_footer(text=f"Page {page}/{total_pages} | {config.EMBED_FOOTER}")
     embed.timestamp = datetime.now()
     return embed, total_pages
+
+def create_server_stats_embed(stats: dict, days: float, lang: str = 'fr') -> discord.Embed:
+    texts = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
+    embed = discord.Embed(title=texts['srv_stats_title'], description=texts['srv_stats_desc'].format(days=int(days)), color=config.BOT_COLOR)
+    
+    embed.add_field(name=texts['srv_field_global'], value=f"{texts['srv_val_total_time'].format(val=format_duration(stats['total_duration']))}\n{texts['srv_val_sessions'].format(val=stats['total_sessions'])}", inline=False)
+    embed.add_field(name=texts['srv_field_daily'], value=f"{texts['srv_val_people_day'].format(val=round(stats['avg_people_per_day'], 1))}\n{texts['srv_val_time_day'].format(val=format_duration(stats['avg_time_user_day']))}", inline=False)
+    embed.add_field(name=texts['srv_field_weekly'], value=f"{texts['srv_val_time_week'].format(val=format_duration(stats['avg_time_user_week']))}", inline=False)
+    
+    embed.set_footer(text=config.EMBED_FOOTER)
+    return embed
 
 def check_permissions(member: discord.Member, allowed_roles: list = None) -> bool:
     if member.guild_permissions.administrator: return True

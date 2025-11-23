@@ -44,6 +44,21 @@ class ChronosBot(commands.Bot):
         await self.update_status()
         await self._handle_restart_context()
 
+    # --- EVENT: Ajout du bot à un serveur ---
+    async def on_guild_join(self, guild):
+        txt = config.TRANSLATIONS['fr']
+        await self.send_system_log(
+            txt['log_guild_join_title'], 
+            txt['log_guild_join_desc'], 
+            discord.Color.green(),
+            [
+                (txt['log_guild_join_name'], guild.name),
+                (txt['log_guild_join_id'], str(guild.id)),
+                (txt['log_guild_join_owner'], str(guild.owner)),
+                (txt['log_guild_join_members'], str(guild.member_count))
+            ]
+        )
+
     async def get_guild_lang(self, guild_id):
         data = await self.db.get_guild_config(str(guild_id))
         return data['language'] if data and data.get('language') else 'fr'
@@ -104,10 +119,14 @@ class ChronosBot(commands.Bot):
 
     async def update_status(self):
         try:
-            total = await self.db.get_total_active_sessions_count()
-            ping = round(self.latency * 1000)
-            status_text = f"{total} active | {ping}ms | /about"
-            await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status_text))
+            if self.maintenance_mode:
+                txt = config.TRANSLATIONS['fr']['maint_block_msg']
+                await self.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Maintenance"))
+            else:
+                total = await self.db.get_total_active_sessions_count()
+                ping = round(self.latency * 1000)
+                status_text = f"{total} active | {ping}ms | /about"
+                await self.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name=status_text))
         except: pass
 
     @tasks.loop(seconds=30)
@@ -130,6 +149,19 @@ class ChronosBot(commands.Bot):
             embed.set_footer(text="Chronis Logs")
             return await log_channel.send(embed=embed)
         except: return None
+    
+    async def send_system_log(self, title: str, description: str, color: discord.Color, fields: list = None):
+        if not config.DEV_LOG_CHANNEL_ID: return None
+        target_id = config.DEV_LOG_CHANNEL_ID
+        channel = self.get_channel(target_id)
+        if not channel:
+            try: channel = await self.fetch_channel(target_id)
+            except: return None
+        embed = discord.Embed(title=title, description=description, color=color, timestamp=datetime.datetime.now())
+        if fields:
+            for n, v in fields: embed.add_field(name=n, value=v, inline=True)
+        embed.set_footer(text="Chronis System")
+        return await channel.send(embed=embed)
 
     @tasks.loop(time=datetime.time(hour=4, minute=0))
     async def scheduled_restart(self):
@@ -143,12 +175,10 @@ class ChronosBot(commands.Bot):
                 if active:
                     for s in active: await self.db.end_session(s['user_id'], str(guild_id))
                     await self.update_service_message(guild_id, config_data)
-                if config_data.get('log_channel_id'):
-                    lang = config_data.get('language', 'fr')
-                    import config as cfg
-                    txt = cfg.TRANSLATIONS[lang]
-                    msg = await self.send_log(int(config_data['guild_id']), txt['log_maint_title'], txt['log_maint_desc'], discord.Color.gold(), [(txt['log_duration_est'], "~5 minutes")])
-                    if msg: restart_data["log_messages"].append({"channel_id": msg.channel.id, "message_id": msg.id})
+            
+            txt = config.TRANSLATIONS['fr']
+            msg = await self.send_system_log(txt['log_maint_title'], txt['log_maint_desc'], discord.Color.gold(), [(txt['log_duration_est'], "~5 minutes")])
+            if msg: restart_data["log_messages"].append({"channel_id": msg.channel.id, "message_id": msg.id})
         except: pass
         
         try:
@@ -157,6 +187,7 @@ class ChronosBot(commands.Bot):
         except: pass
             
         self.maintenance_mode = True
+        await self.update_status()
         await self.close()
 
     async def update_service_message(self, guild_id: int, config_data: dict = None):
@@ -166,10 +197,7 @@ class ChronosBot(commands.Bot):
             channel = self.get_channel(int(config_data['channel_id']))
             if not channel: return
             active = await self.db.get_all_active_sessions(str(guild_id))
-            
-            # Vérif Maintenance
-            is_maint = config_data.get('is_maintenance') == 1
-            
+            is_maint = int(config_data.get('is_maintenance', 0)) == 1
             from utils import create_service_embed
             lang = config_data.get('language', 'fr')
             embed = create_service_embed(active, channel.guild, lang, is_maint)
@@ -182,6 +210,13 @@ def main():
     if not token: return print("❌ ERREUR TOKEN")
     bot = ChronosBot()
 
+    # --- CHECK BLACKLIST GLOBAL (Commandes Texte) ---
+    @bot.check
+    async def globally_block_blacklisted(ctx):
+        if await bot.db.is_blacklisted(str(ctx.author.id)):
+            return False
+        return True
+
     @bot.command()
     @commands.has_permissions(administrator=True)
     async def sync(ctx):
@@ -192,12 +227,8 @@ def main():
         try:
             s = await bot.tree.sync()
             await msg.edit(content=txt['cmd_sync_end'].format(count=len(s)))
-            configs = await bot.db.get_all_guild_configs()
-            for conf in configs:
-                if conf.get('log_channel_id'):
-                    l_lang = conf.get('language', 'fr')
-                    l_txt = cfg.TRANSLATIONS[l_lang]
-                    await bot.send_log(int(conf['guild_id']), l_txt['log_sync_title'], l_txt['log_sync_desc'].format(user=ctx.author.name), discord.Color.purple(), [("Status", l_txt['log_stat_done'])])
+            user_display = f"{ctx.author.name} ({ctx.author.id})"
+            await bot.send_system_log(txt['log_sync_title'], txt['log_sync_desc'].format(user=user_display), discord.Color.purple(), [("Status", txt['log_stat_done'])])
         except Exception as e: await msg.edit(content=f"❌ Error: `{e}`")
 
     @bot.command()
@@ -208,15 +239,10 @@ def main():
         txt = cfg.TRANSLATIONS[lang]
         msg = await ctx.send(txt['cmd_restart_start'])
         restart_data = {"manual_channel_id": ctx.channel.id, "manual_message_id": msg.id, "log_messages": []}
-        try:
-            configs = await bot.db.get_all_guild_configs()
-            for conf in configs:
-                if conf.get('log_channel_id'):
-                    l_lang = conf.get('language', 'fr')
-                    l_txt = cfg.TRANSLATIONS[l_lang]
-                    log_msg = await bot.send_log(int(conf['guild_id']), l_txt['log_restart_title'], l_txt['log_restart_desc'].format(user=ctx.author.name), discord.Color.gold(), [("Status", l_txt['log_stat_wip'])])
-                    if log_msg: restart_data["log_messages"].append({"channel_id": log_msg.channel.id, "message_id": log_msg.id})
-        except: pass
+        
+        user_display = f"{ctx.author.name} ({ctx.author.id})"
+        log_msg = await bot.send_system_log(txt['log_restart_title'], txt['log_restart_desc'].format(user=user_display), discord.Color.gold(), [("Status", txt['log_stat_wip'])])
+        if log_msg: restart_data["log_messages"].append({"channel_id": log_msg.channel.id, "message_id": log_msg.id})
 
         try:
             with open("restart_context.json", "w") as f:
@@ -226,39 +252,50 @@ def main():
         await bot.close()
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
-    # --- COMMANDE MAINTENANCE (Owner) ---
+    # --- MAINTENANCE (CORRIGÉE : Argument Optionnel) ---
     @bot.command()
     @commands.is_owner()
-    async def maintenance(ctx):
-        """Active/Désactive la maintenance"""
+    async def maintenance(ctx, state: str = None):
+        """Active/Désactive la maintenance GLOBALE"""
         import config as cfg
-        conf = await bot.db.get_guild_config(ctx.guild.id)
-        if not conf: return await ctx.send("❌ Configurez le bot d'abord !")
         
-        current = conf.get('is_maintenance', 0)
-        new_state = 0 if current else 1
+        # Si aucun argument, on affiche l'aide
+        if state is None:
+            return await ctx.send("❌ Usage: `+maintenance on` ou `+maintenance off`")
+
+        state = state.lower()
+        if state not in ["on", "off"]:
+            return await ctx.send("❌ Usage: `+maintenance on` ou `+maintenance off`")
+            
+        new_val = 1 if state == "on" else 0
+        bot.maintenance_mode = (new_val == 1) # Variable locale
+        await bot.update_status()
         
-        await bot.db.set_maintenance(str(ctx.guild.id), new_state)
-        await bot.update_service_message(ctx.guild.id)
+        # DB Globale
+        await bot.db.set_global_maintenance(new_val)
         
+        # Update tous les serveurs
+        configs = await bot.db.get_all_guild_configs()
+        count = 0
+        for c in configs:
+            c['is_maintenance'] = new_val 
+            await bot.update_service_message(int(c['guild_id']), c)
+            count += 1
+            
         lang = await bot.get_guild_lang(ctx.guild.id)
         txt = cfg.TRANSLATIONS[lang]
-        msg = txt['maint_enabled'] if new_state else txt['maint_disabled']
-        await ctx.send(msg)
+        msg = txt['maint_enabled'] if new_val else txt['maint_disabled']
+        
+        await bot.send_system_log("🚧 Maintenance", f"Mode {state.upper()} appliqué sur {count} serveurs.", discord.Color.orange())
+        await ctx.send(f"{msg} ({count} serveurs mis à jour)")
 
     @bot.command()
     @commands.is_owner()
     async def stop(ctx):
         import config as cfg
         await ctx.send("🛑")
-        try:
-            configs = await bot.db.get_all_guild_configs()
-            for conf in configs:
-                if conf.get('log_channel_id'):
-                    l_lang = conf.get('language', 'fr')
-                    l_txt = cfg.TRANSLATIONS[l_lang]
-                    await bot.send_log(int(conf['guild_id']), l_txt['log_bot_stop_title'], l_txt['log_bot_stop_desc'], discord.Color.red())
-        except: pass
+        txt = cfg.TRANSLATIONS['fr']
+        await bot.send_system_log(txt['log_bot_stop_title'], txt['log_bot_stop_desc'], discord.Color.red())
         await bot.close()
         sys.exit(0)
 
@@ -267,14 +304,45 @@ def main():
     async def start(ctx):
         import config as cfg
         await ctx.send("🟢")
-        try:
-            configs = await bot.db.get_all_guild_configs()
-            for conf in configs:
-                if conf.get('log_channel_id'):
-                    l_lang = conf.get('language', 'fr')
-                    l_txt = cfg.TRANSLATIONS[l_lang]
-                    await bot.send_log(int(conf['guild_id']), l_txt['log_bot_start_title'], l_txt['log_bot_start_desc'], discord.Color.green())
-        except: pass
+        txt = cfg.TRANSLATIONS['fr']
+        await bot.send_system_log(txt['log_bot_start_title'], txt['log_bot_start_desc'], discord.Color.green())
+
+    # --- BLACKLIST & INFOS ---
+    @bot.command()
+    @commands.is_owner()
+    async def bl(ctx, user_id: str):
+        import config as cfg
+        txt = cfg.TRANSLATIONS['fr']
+        if await bot.db.is_blacklisted(user_id):
+            return await ctx.send(txt['bl_already'])
+        await bot.db.add_blacklist(user_id)
+        await ctx.send(txt['bl_add_success'].format(user=user_id))
+        await bot.send_system_log("⛔ Blacklist", f"User {user_id} ajouté.", discord.Color.red())
+
+    @bot.command()
+    @commands.is_owner()
+    async def unbl(ctx, user_id: str):
+        import config as cfg
+        txt = cfg.TRANSLATIONS['fr']
+        if not await bot.db.is_blacklisted(user_id):
+            return await ctx.send(txt['bl_not_found'])
+        await bot.db.remove_blacklist(user_id)
+        await ctx.send(txt['bl_remove_success'].format(user=user_id))
+        await bot.send_system_log("✅ Un-Blacklist", f"User {user_id} retiré.", discord.Color.green())
+
+    @bot.command()
+    @commands.is_owner()
+    async def infos(ctx):
+        import config as cfg
+        txt = cfg.TRANSLATIONS['fr']
+        guild_count = len(bot.guilds)
+        # Affiche les 20 premiers serveurs
+        s_list = "\n".join([f"• {g.name} (`{g.id}`) - {g.member_count}" for g in bot.guilds[:20]])
+        if len(bot.guilds) > 20: s_list += f"\n... et {len(bot.guilds)-20} autres."
+        
+        embed = discord.Embed(title=txt['infos_title'], description=txt['infos_desc'].format(count=guild_count), color=config.BOT_COLOR)
+        embed.add_field(name="Serveurs", value=s_list or "Aucun", inline=False)
+        await ctx.send(embed=embed)
 
     try: bot.run(token)
     except KeyboardInterrupt: pass
