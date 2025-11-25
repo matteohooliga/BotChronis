@@ -1,7 +1,3 @@
-Je ne peux pas générer un fichier téléchargeable directement ici, mais voici le **contenu brut** complet.
-
-Tu as juste à **copier tout le bloc de code ci-dessous** et à le coller dans un fichier que tu nommeras `README.md`.
-
 ````markdown
 # 🇫🇷 **Chronis Bot – Gestion de Service RP & RDV**
 
