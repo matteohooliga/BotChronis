@@ -1,4 +1,3 @@
-
 # 🇫🇷 **Chronis Bot – Gestion de Service RP & RDV**
 
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
@@ -85,22 +84,63 @@ chmod +x start.sh
 
 -----
 
-## 🖥️ **Liste des Commandes**
+## 📚 **Liste Complète des Commandes**
 
-| Commande | Description | Permission |
+### 👤 **Commandes Publiques (Tout le monde)**
+
+*Accessibles à tous les membres.*
+
+| Commande | Description |
+| :--- | :--- |
+| **/sum** `[user]` | Affiche les statistiques personnelles (Temps, Moyenne, Dates) ou celles d'un autre. |
+| **/sumall** | Affiche le classement global (Leaderboard) du serveur. |
+| **/absence** | Déclarer une absence officielle (Date début/fin + Raison). |
+| **/feedback** | Envoyer un avis ou signaler un bug au développeur. |
+| **/help** | Affiche le menu d'aide interactif. |
+| **/about** | Affiche les informations techniques et statistiques du bot. |
+
+### 👮 **Commandes Staff / Direction**
+
+*Nécessite la permission "Gérer le serveur" ou un rôle spécifique.*
+
+| Commande | Description |
+| :--- | :--- |
+| **/forcestart** `[user]` | Démarre de force la prise de service d'un joueur. |
+| **/pause** `[user]` | Met en pause (ou reprend) de force le service d'un joueur. |
+| **/details** `[user]` | Historique détaillé des 10 dernières sessions d'un joueur. |
+| **/edittime** `[user]` | Ajouter ou retirer manuellement du temps à un joueur. |
+| **/pauselist** | Affiche la liste des agents actuellement en pause. |
+
+### 👑 **Commandes Administrateur**
+
+*Nécessite la permission "Administrateur".*
+
+| Commande | Description |
+| :--- | :--- |
+| **/setup** | Panneau de configuration principal (Salons, Rôles, Langue). |
+| **/config\_rdv** | Configurer le système de Rendez-Vous et les motifs. |
+| **/server\_stats** | Audit complet du serveur avec graphiques d'activité. |
+| **/presence** `[channel]` | Liste des agents en service ou recensement des réactions. |
+| **/close** `[user]` | Ferme de force la session d'un joueur (sauvegarde le temps). |
+| **/cancel** `[user]` | Annule une session en cours **sans** sauvegarder (suppression). |
+| **/remove\_user** `[user]` | Supprime définitivement toutes les données d'un joueur. |
+| **/reset\_server** | Réinitialise les données (Semaine/Mois/Tout). |
+| **/auto\_role** `[user]` | Attribue manuellement les rôles automatiques configurés. |
+
+### 🛠️ **Commandes Système (Préfixe +)**
+
+*Réservées au Propriétaire (Owner) ou aux Admins pour la maintenance.*
+
+| Commande | Permission | Description |
 | :--- | :--- | :--- |
-| `/setup` | Panneau de configuration (Salons, Rôles, Langue). | Admin |
-| `/config_rdv` | Configurer le système de Rendez-Vous et les motifs. | Admin |
-| `/sum` | Vos statistiques personnelles (Temps, Dates, Moyenne). | Tous |
-| `/sumall` | Classement général du serveur. | Tous |
-| `/absence` | Déclarer une absence (Dates + Raison). | Tous |
-| `/presence` | Liste des agents en service (ou recensement réactions). | Admin |
-| `/server_stats` | Affiche les graphiques d'activité du serveur. | Admin |
-| `/details [user]` | Historique détaillé des sessions d'un joueur. | Staff |
-| `/edittime` | Ajouter/Retirer du temps manuellement. | Staff |
-| `/forcestart` | Forcer la prise de service d'un joueur. | Staff |
-| `/close` | Forcer la fin de service d'un joueur. | Admin |
-| `/reset_server` | Réinitialiser les données (Semaine/Mois/Tout). | Admin |
+| **+sync** | Admin | Synchronise les commandes Slash (`/`) sur le serveur. |
+| **+restart** | Admin | Redémarre le bot (utile après une mise à jour). |
+| **+fix\_doublons** | Owner | Nettoie et resynchronise les commandes pour supprimer les doublons. |
+| **+maintenance** | Owner | Active/Désactive le mode maintenance (bloque les boutons). |
+| **+debug** | Owner | Recharge l'extension `cogs` sans éteindre le bot. |
+| **+infos** | Owner | Affiche la liste des serveurs où le bot est présent. |
+| **+stop** | Owner | Arrête complètement le processus du bot. |
+| **+start** | Owner | Envoie un message de confirmation "Bot en ligne". |
 
 -----
 
@@ -195,22 +235,63 @@ chmod +x start.sh
 
 -----
 
-## 🖥️ **Main Commands**
+## 📚 **Complete Command List**
 
-| Command | Description | Permission |
+### 👤 **Public Commands (Everyone)**
+
+*Available to all server members.*
+
+| Command | Description |
+| :--- | :--- |
+| **/sum** `[user]` | Display personal stats (Time, Avg, Dates) or check another user. |
+| **/sumall** | Display the server leaderboard. |
+| **/absence** | Declare an official absence (Dates + Reason). |
+| **/feedback** | Send feedback or report a bug to the developer. |
+| **/help** | Show the interactive help menu. |
+| **/about** | Display bot technical info and stats. |
+
+### 👮 **Staff / Management Commands**
+
+*Requires "Manage Server" permission or specific role.*
+
+| Command | Description |
+| :--- | :--- |
+| **/forcestart** `[user]` | Force start a player's service session. |
+| **/pause** `[user]` | Force pause (or resume) a player's service. |
+| **/details** `[user]` | Detailed history of the last 10 sessions. |
+| **/edittime** `[user]` | Manually add or remove time from a player. |
+| **/pauselist** | Show the list of agents currently on pause. |
+
+### 👑 **Admin Commands**
+
+*Requires "Administrator" permission.*
+
+| Command | Description |
+| :--- | :--- |
+| **/setup** | Main configuration panel (Channels, Roles, Language). |
+| **/config\_rdv** | Configure the Appointment system and reasons. |
+| **/server\_stats** | Full server audit with activity graphs. |
+| **/presence** `[channel]` | List of on-duty agents or reaction census. |
+| **/close** `[user]` | Force close a session (saves time). |
+| **/cancel** `[user]` | Cancel a session **without** saving (deletion). |
+| **/remove\_user** `[user]` | Permanently delete all data for a user. |
+| **/reset\_server** | Wipe data (Weekly/Monthly/Total). |
+| **/auto\_role** `[user]` | Manually assign configured auto-roles. |
+
+### 🛠️ **System Commands (Prefix +)**
+
+*Reserved for Bot Owner or Admins for maintenance.*
+
+| Command | Permission | Description |
 | :--- | :--- | :--- |
-| `/setup` | Configure the bot (Channels, Roles, Language). | Admin |
-| `/config_rdv` | Configure the Appointment system and reasons. | Admin |
-| `/sum` | Display your personal stats (Time, Dates, Avg). | Everyone |
-| `/sumall` | Display the server leaderboard. | Everyone |
-| `/absence` | Declare an absence (Dates + Reason). | Everyone |
-| `/presence` | Show the list of agents currently on duty. | Admin |
-| `/server_stats` | Display server activity graphs. | Admin |
-| `/details [user]` | Detailed history of a player's sessions. | Staff |
-| `/edittime` | Manually add/remove time. | Staff |
-| `/forcestart` | Force start a session for a player. | Staff |
-| `/close` | Force close a player's session. | Admin |
-| `/reset_server` | Wipe data (Weekly/Monthly/Total). | Admin |
+| **+sync** | Admin | Sync Slash commands (`/`) on the current server. |
+| **+restart** | Admin | Restart the bot (useful after updates). |
+| **+fix\_doublons** | Owner | Clean and resync commands to fix duplicates. |
+| **+maintenance** | Owner | Toggle maintenance mode (locks buttons). |
+| **+debug** | Owner | Reload the `cogs` extension without stopping. |
+| **+infos** | Owner | Show the list of servers using the bot. |
+| **+stop** | Owner | Completely stop the bot process. |
+| **+start** | Owner | Send a "Bot Online" confirmation message. |
 
 ```
 ```
