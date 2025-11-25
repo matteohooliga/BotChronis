@@ -1,4 +1,4 @@
-````markdown
+
 # 🇫🇷 **Chronis Bot – Gestion de Service RP & RDV**
 
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
