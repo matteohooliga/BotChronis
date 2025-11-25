@@ -10,11 +10,18 @@ OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
 # Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
+DEV_FEEDBACK_CHANNEL_ID = ID OF YOUR CHANNEL
 # Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = 1106286037568860311
+DEV_FEEDBACK_ROLE_ID = ID OF THE FEEDBACK ROLE
 # Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = 1441382041831739526
+DEV_LOG_CHANNEL_ID = ID FOR THE DEV LOG CHANNEL
+
+# --- CONFIGURATION BASE DE DONNEES EXTERNE ---
+DB_HOST = "IP OF YOUR DB"       # L'adresse IP (server)
+DB_PORT = 3306                   # Port standard MySQL
+DB_USER = "USERNAME OF UR DB"     # L'utilisateur (uid)
+DB_PASSWORD = "PASSWORD OF UR DB" # Le mot de passe
+DB_NAME = "DB NAME"        # Le nom de la base
 
 # Liens
 GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
@@ -107,7 +114,8 @@ TRANSLATIONS = {
         # --- DETAILS ---
         "det_title": "📄 Rapport Détaillé : {user}",
         "det_stats": "📊 Statistiques",
-        "det_history": "📜 Historique Récent",
+        "det_history": "📜 Historique des Sessions ({count})",
+        "det_range": "🗓️ **Période d'activité**\n**Premier service** : {first}\n**Dernier service** : {last}\n\n",
         "det_type_service": "🟢 Service",
         "det_type_adjust": "🔧 Ajustement Admin",
 
@@ -133,13 +141,14 @@ TRANSLATIONS = {
         "et_label_seconds": "Secondes",
         "et_placeholder": "0",
 
-        # --- ADMIN PAUSE ---
+        # --- ADMIN PAUSE & START ---
         "admin_pause_success": "⏸️ Le service de {user} a été mis en pause par un administrateur.",
         "admin_resume_success": "▶️ Le service de {user} a été relancé par un administrateur.",
+        "admin_start_success": "▶️ Le service de {user} a été démarré de force par un administrateur.", 
         "log_admin_pause_title": "⏸️ Pause Forcée",
         "log_admin_resume_title": "▶️ Reprise Forcée",
-        "paused_list_title": "⏸️ Agents en Pause", 
-        "paused_list_empty": "✅ Aucun agent n'est actuellement en pause.",
+        "log_admin_start_title": "▶️ Démarrage Forcé", # 
+        "log_admin_start_desc": "Service forcé par {admin} pour {user}.", 
 
         # --- MAINTENANCE ---
         "maint_embed_title": "🚧 MAINTENANCE EN COURS",
@@ -238,6 +247,41 @@ TRANSLATIONS = {
         "fb_log_bug_title": "🐛 Bug Reçu",
         "fb_field_media": "Preuve",
 
+        # Dans TRANSLATIONS['fr'] :
+        
+        # --- RDV SYSTEM ---
+        "rdv_setup_title": "🏥 Config Rendez-Vous",
+        "rdv_setup_desc": "Configurez les salons et le rôle.\n\n**Motifs actuels :**\n{types}", 
+        "rdv_ph_public": "Salon Public (Affichage Panel)",
+        "rdv_ph_staff": "Salon Staff (Réception demandes)",
+        "rdv_ph_transcript": "Salon Logs/Transcripts (Staff)", 
+        "rdv_ph_role": "Rôle Médecin/Staff",
+        "rdv_btn_add": "Ajouter Motif",
+        "rdv_btn_del": "Supprimer Motif",
+        "rdv_modal_type_title": "Nouveau Motif",
+        "rdv_modal_type_label": "Nom (ex: Consultation)",
+        "rdv_panel_title": "📅 Prise de Rendez-Vous",
+        "rdv_panel_desc": "Sélectionnez un motif ci-dessous pour prendre RDV.",
+        "rdv_select_ph": "Choisir le motif...",
+        "rdv_modal_book_title": "Formulaire RDV",
+        "rdv_modal_book_label": "Disponibilités / Raison",
+        "rdv_new_req_title": "📩 Nouvelle Demande",
+        "rdv_btn_accept": "Accepter",
+        "rdv_btn_refuse": "Refuser",
+        "rdv_accepted": "✅ Dossier créé : {channel}",
+        "rdv_refused": "❌ Refusé par {user}.",
+        "rdv_ticket_welcome": "👋 Bonjour {user} !\nUn {role} va prendre en charge votre demande de **{type}**.\n\n**Infos :** {info}",
+        "rdv_btn_close": "Fermer le dossier",
+        "rdv_err_config": "⚠️ Configuration incomplète.",
+        "rdv_err_perms": "⛔ Vous n'avez pas le rôle requis pour gérer ce RDV.",
+        
+        # LOGS RDV
+        "rdv_log_closed_title": "🔒 RDV Fermé",
+        "rdv_log_closed_desc": "Le ticket de {patient} a été fermé.",
+        "rdv_log_accepted_title": "✅ RDV Accepté",
+        "rdv_log_accepted_desc": "Ticket accepté par {staff} pour {patient}.",
+        "rdv_transcript_dm": "📄 Voici le transcript de votre ticket RDV.",
+
         # --- ABSENCE ---
         "abs_modal_title": "Déclarer une absence", 
         "abs_start_label": "Début", "abs_start_ph": "JJ/MM/AAAA",
@@ -247,8 +291,17 @@ TRANSLATIONS = {
         "abs_field_dates": "Dates", "abs_field_duration": "Durée", "abs_field_reason": "Raison", 
         "abs_error_format": "❌ Date invalide.", "abs_error_logic": "❌ Fin < Début.",
         "abs_user_field": "👤 Agent",
+        "sumall_tag_absence": "🚫 **Absence**",
+        "abs_btn_end": "✅ Fin de l'absence",
+        "abs_ended": "✅ Absence terminée (Retour anticipé).",
+        "abs_err_owner": "⛔ Seul l'auteur peut terminer l'absence.",
 
-        # --- INFO AUTOMATIQUE ---
+        # --- INFO & ABOUT ---
+        "about_stats_title": "📊 Statistiques",
+        "about_tech_title": "🛠️ Technique",
+        "about_val_servers": "**Serveurs** : `{val}`",
+        "about_val_users": "**Utilisateurs** : `{val}`",
+        "about_val_version": "**Python** : `{py}` | **D.py** : `{dpy}`",
         "about_maint_title": "🔄 Maintenance Automatique",
         "about_maint_desc": "🕒 **04h00** : Redémarrage journalier.\n⚠️ Tous les services actifs sont fermés automatiquement.",
 
@@ -258,11 +311,32 @@ TRANSLATIONS = {
         "srv_field_global": "🌍 Données Globales",
         "srv_val_total_time": "• Temps Cumulé : `{val}`",
         "srv_val_sessions": "• Sessions Totales : `{val}`",
+        "srv_val_total_agents": "• Agents Uniques : `{val}`", # 
         "srv_field_daily": "📅 Moyennes Journalières",
         "srv_val_people_day": "• Effectif Moyen : `{val} agents/jour`",
         "srv_val_time_day": "• Temps Moyen : `{val}/agent/jour`",
         "srv_field_weekly": "🗓️ Moyennes Hebdomadaires",
         "srv_val_time_week": "• Temps Moyen : `{val}/agent/semaine`",
+
+        # --- SERVER STATS INTERACTIF ---
+        "srv_select_placeholder": "Choisir la vue (Hebdo/Journalier)",
+        "srv_opt_weekly": "Vue Hebdomadaire (7 jours)",
+        "srv_opt_daily": "Vue Journalière (24 heures)",
+        "srv_btn_next_graph": "Graphique Suivant ➡️",
+        
+        "srv_title_weekly_hours": "📊 Heures Cumulées (7j)",
+        "srv_title_weekly_staff": "👥 Effectif Unique (7j)",
+        "srv_title_weekly_avg": "⏱️ Temps Moyen (7j)",
+        
+        "srv_title_daily_activity": "📈 Activité par Heure (00h-23h)",
+        "srv_title_daily_avg": "⏱️ Temps Moyen par Session (00h-23h)",
+        "srv_title_daily_starts": "🚀 Prises de service par Heure",
+        "srv_title_daily_sessions": "🔄 Sessions Lancées (7j)",
+        
+        "srv_label_hours": "Heures",
+        "srv_label_agents": "Agents",
+        "srv_label_activity": "Présence Cumulée",
+
 
         # --- HELP DÉTAILLÉ FR ---
         "help_title": "📚 Aide", "help_desc": "Choisir une catégorie.",
@@ -286,27 +360,30 @@ TRANSLATIONS = {
         ),
         
         "help_cmds_admin": (
+            "**• `/server_stats`**\n"
+            "└ Statistiques avancées du serveur.\n\n"
             "**• `/presence [salon]`**\n"
-            "└ Liste instantanée des agents en service.\n"
-            "└ Si un salon est précisé : Recensement des réactions.\n\n"
+            "└ Liste instantanée des agents (ou recensement réactions).\n\n"
             "**• `/pauselist`**\n"
-            "└ Affiche la liste spécifique des agents en pause.\n\n"
+            "└ Affiche la liste des agents en pause.\n\n"
+            "**• `/forcestart [joueur]`**\n"
+            "└ Forcer le début de service d'un agent.\n\n"
             "**• `/details [joueur]`**\n"
             "└ Historique détaillé des 10 dernières sessions.\n\n"
             "**• `/close [joueur]`**\n"
             "└ Forcer la fin de service d'un agent.\n\n"
             "**• `/pause [joueur]`**\n"
-            "└ Forcer la mise en pause d'un agent.\n\n"
+            "└ Forcer la pause d'un agent.\n\n"
             "**• `/edittime`**\n"
             "└ Corriger manuellement le temps (Ajout/Retrait).\n\n"
             "**• `/cancel [joueur]`**\n"
-            "└ Annuler une session en cours sans sauvegarde.\n\n"
+            "└ Annuler une session sans sauvegarde.\n\n"
             "**• `/remove_user`**\n"
             "└ Supprimer définitivement le dossier d'un agent.\n\n"
             "**• `/reset_server`**\n"
-            "└ Réinitialisation globale des stats (Hebdo/Mensuel).\n\n"
+            "└ Réinitialisation globale (Hebdo/Mensuel).\n\n"
             "**• `/auto_role`**\n"
-            "└ Attribuer les rôles configurés.\n\n"
+            "└ Attribuer les rôles configuré.\n\n"
             "**• `/setup`**\n"
             "└ Panneau de configuration générale."
         ),
@@ -348,8 +425,12 @@ TRANSLATIONS = {
         "goal_warning_title": "🚨 GOAL MISSED", "goal_warning_desc": "Warning: Time is under target ({goal}).",
         
         # --- DETAILS ---
-        "det_title": "📄 Report: {user}", "det_stats": "📊 Statistics", "det_history": "📜 Recent History",
-        "det_type_service": "🟢 Service", "det_type_adjust": "🔧 Adjustment",
+        "det_title": "📄 Report: {user}",
+        "det_stats": "📊 Statistics",
+        "det_history": "📜 Session History ({count})",
+        "det_range": "🗓️ **Activity Range**\n**First Shift**: {first}\n**Last Shift**: {last}\n\n",
+        "det_type_service": "🟢 Service",
+        "det_type_adjust": "🔧 Adjustment",
         
         # --- EDIT TIME ---
         "edit_title": "⏱️ Time Edited", "edit_success": "✅ Edited for {user}.", "edit_desc": "Manual time adjustment.",
@@ -360,12 +441,14 @@ TRANSLATIONS = {
         "et_modal_add": "Add Time", "et_modal_remove": "Remove Time", "et_label_hours": "Hours", "et_label_minutes": "Minutes",
         "et_label_seconds": "Seconds", "et_placeholder": "0",
 
-        # --- ADMIN PAUSE ---
+        # --- ADMIN PAUSE & START ---
         "admin_pause_success": "⏸️ Service of {user} paused by admin.",
         "admin_resume_success": "▶️ Service of {user} resumed by admin.",
-        "log_admin_pause_title": "⏸️ Forced Pause", "log_admin_resume_title": "▶️ Forced Resume",
-        "cancel_success": "🗑️ Session cancelled and deleted.",
-        "paused_list_title": "⏸️ Paused Agents", "paused_list_empty": "✅ No one is paused.",
+        "admin_start_success": "▶️ Service of {user} force started by admin.", 
+        "log_admin_pause_title": "⏸️ Forced Pause",
+        "log_admin_resume_title": "▶️ Forced Resume",
+        "log_admin_start_title": "▶️ Forced Start", 
+        "log_admin_start_desc": "Started by {admin} for {user}.", 
 
         # --- LOGS ---
         "log_start_title": "🟢 Service Start", "log_start_desc": "Agent {user} started service.",
@@ -417,22 +500,54 @@ TRANSLATIONS = {
         "abs_start_ph": "DD/MM/YYYY", "abs_end_ph": "DD/MM/YYYY", "abs_reason_ph": "...", "abs_embed_title": "📅 Absence",
         "abs_field_dates": "Dates", "abs_field_duration": "Duration", "abs_field_reason": "Reason",
         "abs_error_format": "❌ Bad Date.", "abs_error_logic": "❌ End < Start.", "abs_user_field": "👤 Agent",
+        "sumall_tag_absence": "🚫 [Absent]",
+
+        # --- RDV SYSTEM ---
+        "rdv_setup_title": "🏥 RDV Config", "rdv_panel_title": "📅 Appointments",
+        "rdv_select_ph": "Select type...", "rdv_btn_accept": "Accept", "rdv_btn_refuse": "Refuse",
+        "rdv_ticket_welcome": "👋 Hello {user}!\nStaff ({role}) will handle your **{type}**.\nInfo: {info}",
+        "abs_btn_end": "✅ End Absence", "abs_ended": "✅ **Absence ended.**",
 
         # --- SERVER STATS ---
         "srv_stats_title": "📈 Server Activity Audit",
-        "srv_stats_desc": "Analysis over **{days}** active days.",
+        "srv_stats_desc": "Analysis based on **{days}** active days.",
         "srv_field_global": "🌍 Global Data",
         "srv_val_total_time": "• Total Time: `{val}`",
         "srv_val_sessions": "• Total Sessions: `{val}`",
+        "srv_val_total_agents": "• Unique Agents: `{val}`",
         "srv_field_daily": "📅 Daily Averages",
         "srv_val_people_day": "• Avg Staff: `{val} agents/day`",
         "srv_val_time_day": "• Avg Time: `{val}/agent/day`",
         "srv_field_weekly": "🗓️ Weekly Averages",
         "srv_val_time_week": "• Avg Time: `{val}/agent/week`",
 
-        # --- INFO ---
+        # --- SERVER STATS INTERACTIVE ---
+        "srv_select_placeholder": "Select View (Weekly/Daily)",
+        "srv_opt_weekly": "Weekly View (7 days)",
+        "srv_opt_daily": "Daily View (24 hours)",
+        "srv_btn_next_graph": "Next Graph ➡️",
+        
+        "srv_title_weekly_hours": "📊 Cumulative Hours (7d)",
+        "srv_title_weekly_staff": "👥 Unique Staff (7d)",
+        "srv_title_weekly_avg": "⏱️ Average Time (7d)",
+        
+        "srv_title_daily_activity": "📈 Hourly Activity (00h-23h)",
+        "srv_title_daily_avg": "⏱️ Avg Time per Session (00h-23h)",
+        "srv_title_daily_starts": "🚀 Shifts Started per Hour",
+        "srv_title_daily_sessions": "🔄 Sessions Started (7d)",
+
+        "srv_label_hours": "Hours",
+        "srv_label_agents": "Agents",
+        "srv_label_activity": "Cumulative Presence",
+
+        # --- INFO & ABOUT ---
+        "about_stats_title": "📊 Statistics",
+        "about_tech_title": "🛠️ Tech",
+        "about_val_servers": "**Servers**: `{val}`",
+        "about_val_users": "**Users**: `{val}`",
+        "about_val_version": "**Py**: `{py}` | **D.py**: `{dpy}`",
         "about_maint_title": "🔄 Auto Maintenance",
-        "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions are closed automatically.",
+        "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions closed.",
 
         # --- HELP DETAILED (EN) ---
         "help_title": "📚 Help", "help_desc": "Select category.", "help_cat_user": "Users", "help_cat_admin": "Admin", "help_back": "Back", "help_back_lang": "Language",
@@ -455,19 +570,23 @@ TRANSLATIONS = {
         
         "help_admin_desc": "**Staff Commands:**",
         "help_cmds_admin": (
+            "**• `/server_stats`**\n"
+            "└ Advanced server audit.\n\n"
             "**• `/presence [channel]`**\n"
             "└ Live list of agents (or reaction census).\n\n"
             "**• `/pauselist`**\n"
             "└ List of paused agents.\n\n"
-            "**• `/details [player]`**\n"
+            "**• `/forcestart [user]`**\n"
+            "└ Force start a session for an agent.\n\n"
+            "**• `/details [user]`**\n"
             "└ Detailed history of last 10 sessions.\n\n"
-            "**• `/close [player]`**\n"
+            "**• `/close [user]`**\n"
             "└ Force close an agent's session.\n\n"
-            "**• `/pause [player]`**\n"
+            "**• `/pause [user]`**\n"
             "└ Force pause an agent.\n\n"
             "**• `/edittime`**\n"
             "└ Manually adjust time (Add/Remove).\n\n"
-            "**• `/cancel [player]`**\n"
+            "**• `/cancel [user]`**\n"
             "└ Cancel a session without saving.\n\n"
             "**• `/remove_user`**\n"
             "└ Permanently delete a player's data.\n\n"

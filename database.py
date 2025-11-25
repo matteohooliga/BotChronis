@@ -1,279 +1,364 @@
-import aiosqlite
+import aiomysql
 import json
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from collections import defaultdict
+from datetime import datetime, timedelta
 import config
+from utils import format_duration 
 
 class ChronosDatabase:
     def __init__(self, db_name: str = config.DATABASE_NAME):
         self.db_name = db_name
+        self.pool = None
+        self._config_cache = {} 
+
+    async def get_pool(self):
+        if not self.pool:
+            self.pool = await aiomysql.create_pool(
+                host=config.DB_HOST,
+                port=config.DB_PORT,
+                user=config.DB_USER,
+                password=config.DB_PASSWORD,
+                db=config.DB_NAME,
+                autocommit=True,
+                cursorclass=aiomysql.DictCursor 
+            )
+        return self.pool
+
+    async def _execute(self, query, args=None):
+        pool = await self.get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(query, args)
+                return cur.lastrowid, cur.rowcount
+
+    async def _fetch(self, query, args=None, one=False):
+        pool = await self.get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(query, args)
+                return await cur.fetchone() if one else await cur.fetchall()
 
     async def initialize_database(self):
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, guild_id TEXT, username TEXT, start_time INTEGER, end_time INTEGER, pause_duration INTEGER DEFAULT 0, total_duration INTEGER, is_active INTEGER DEFAULT 1, is_paused INTEGER DEFAULT 0, pause_start INTEGER, created_at INTEGER DEFAULT (strftime('%s', 'now')))")
-            await db.execute("CREATE TABLE IF NOT EXISTS guild_config (guild_id TEXT PRIMARY KEY, channel_id TEXT, message_id TEXT, log_channel_id TEXT, direction_role_id TEXT, auto_roles_list TEXT, min_hours_goal INTEGER DEFAULT 0, is_maintenance INTEGER DEFAULT 0, language TEXT DEFAULT 'fr', allowed_roles TEXT, created_at INTEGER, updated_at INTEGER)")
-            await db.execute("CREATE TABLE IF NOT EXISTS blacklist (user_id TEXT PRIMARY KEY)")
-            
-            cols = ["log_channel_id", "direction_role_id", "auto_roles_list", "min_hours_goal", "is_maintenance", "language"]
-            for col in cols:
-                try: await db.execute(f"ALTER TABLE guild_config ADD COLUMN {col} TEXT")
-                except: pass
-            await db.commit()
+        queries = [
+            """CREATE TABLE IF NOT EXISTS sessions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                guild_id VARCHAR(255) NOT NULL,
+                username VARCHAR(255),
+                start_time BIGINT,
+                start_time_human VARCHAR(50),
+                end_time BIGINT,
+                end_time_human VARCHAR(50),
+                pause_duration BIGINT DEFAULT 0,
+                pause_duration_human VARCHAR(50),
+                total_duration BIGINT,
+                total_duration_human VARCHAR(50),
+                is_active TINYINT DEFAULT 1,
+                is_paused TINYINT DEFAULT 0,
+                pause_start BIGINT,
+                created_at BIGINT
+            )""",
+            """CREATE TABLE IF NOT EXISTS guild_config (
+                guild_id VARCHAR(255) PRIMARY KEY,
+                channel_id VARCHAR(255),
+                message_id VARCHAR(255),
+                log_channel_id VARCHAR(255),
+                direction_role_id TEXT,
+                auto_roles_list TEXT,
+                min_hours_goal INT DEFAULT 0,
+                is_maintenance TINYINT DEFAULT 0,
+                language VARCHAR(10) DEFAULT 'fr',
+                allowed_roles TEXT,
+                created_at BIGINT,
+                updated_at BIGINT,
+                updated_at_human VARCHAR(50),
+                rdv_channel_public VARCHAR(255),
+                rdv_channel_staff VARCHAR(255),
+                rdv_channel_transcript VARCHAR(255),
+                rdv_message_id VARCHAR(255),
+                rdv_role_staff VARCHAR(255),
+                rdv_types TEXT
+            )""",
+            "CREATE TABLE IF NOT EXISTS blacklist (user_id VARCHAR(255) PRIMARY KEY, username VARCHAR(255))",
+            """CREATE TABLE IF NOT EXISTS absences (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(255),
+                username VARCHAR(255),
+                guild_id VARCHAR(255),
+                start_date VARCHAR(20),
+                end_date VARCHAR(20),
+                reason TEXT,
+                message_id VARCHAR(255)
+            )""",
+            "CREATE INDEX IF NOT EXISTS idx_sessions_active ON sessions(guild_id, is_active)",
+            "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id, guild_id)",
+            "CREATE INDEX IF NOT EXISTS idx_sessions_start ON sessions(start_time)"
+        ]
+        for q in queries:
+            try:
+                await self._execute(q)
+            except Exception as e:
+                print(f"Erreur init DB: {e}")
 
-    # --- STATISTIQUES AVANCÉES (Nouvelle Logique) ---
-    async def get_advanced_server_stats(self, guild_id):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            # Récupérer uniquement les sessions terminées pour les stats historiques
-            async with db.execute("SELECT user_id, total_duration, start_time FROM sessions WHERE guild_id = ? AND is_active = 0", (guild_id,)) as cur:
-                rows = await cur.fetchall()
-            
-            if not rows: return None
+    # --- ABSENCES ---
+    async def add_absence(self, user_id, username, guild_id, start_date_str, end_date_str, reason, message_id=None):
+        await self._execute(
+            "INSERT INTO absences (user_id, username, guild_id, start_date, end_date, reason, message_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (str(user_id), str(username), str(guild_id), start_date_str, end_date_str, reason, str(message_id) if message_id else None)
+        )
 
-            # Structures pour l'agrégation
-            daily_stats = defaultdict(lambda: {'users': set(), 'duration': 0})
-            weekly_stats = defaultdict(lambda: {'users': set(), 'duration': 0})
-            total_duration_global = 0
-            
-            for r in rows:
-                duration = r['total_duration'] or 0
-                uid = r['user_id']
-                
-                # Conversion Timestamp -> Date
-                dt = datetime.fromtimestamp(r['start_time'] / 1000)
-                day_key = dt.date() # Ex: 2023-11-21
-                week_key = f"{dt.year}-{dt.isocalendar()[1]}" # Ex: 2023-47
-                
-                # Agrégation Jour
-                daily_stats[day_key]['users'].add(uid)
-                daily_stats[day_key]['duration'] += duration
-                
-                # Agrégation Semaine
-                weekly_stats[week_key]['users'].add(uid)
-                weekly_stats[week_key]['duration'] += duration
-                
-                total_duration_global += duration
+    async def end_absence(self, message_id):
+        await self._execute("DELETE FROM absences WHERE message_id = %s", (str(message_id),))
 
-            # Calculs finaux
-            days_count = len(daily_stats)
-            weeks_count = len(weekly_stats)
-            
-            # 1. Moyenne de personnes en service par jour
-            # Somme des utilisateurs uniques chaque jour / Nombre de jours
-            sum_users_per_day = sum(len(d['users']) for d in daily_stats.values())
-            avg_people_per_day = sum_users_per_day / days_count if days_count > 0 else 0
-            
-            # 2. Temps moyen de service par utilisateur par jour
-            # On prend la durée totale du jour divisée par le nombre d'utilisateurs ce jour-là, puis on fait la moyenne de tout ça
-            daily_averages = []
-            for d in daily_stats.values():
-                if len(d['users']) > 0:
-                    daily_averages.append(d['duration'] / len(d['users']))
-            avg_time_user_day = (sum(daily_averages) / len(daily_averages)) if daily_averages else 0
-            
-            # 3. Temps moyen de service par utilisateur par semaine
-            weekly_averages = []
-            for w in weekly_stats.values():
-                if len(w['users']) > 0:
-                    weekly_averages.append(w['duration'] / len(w['users']))
-            avg_time_user_week = (sum(weekly_averages) / len(weekly_averages)) if weekly_averages else 0
+    async def delete_expired_absences(self):
+        await self._execute("DELETE FROM absences WHERE STR_TO_DATE(end_date, '%d/%m/%Y') < CURDATE()")
 
+    async def get_absent_users(self, guild_id):
+        rows = await self._fetch("""
+            SELECT user_id FROM absences 
+            WHERE guild_id = %s 
+            AND CURDATE() BETWEEN STR_TO_DATE(start_date, '%%d/%%m/%%Y') AND STR_TO_DATE(end_date, '%%d/%%m/%%Y')
+        """, (str(guild_id),))
+        return [str(r['user_id']) for r in rows]
+
+    # --- CONFIG RDV ---
+    async def set_rdv_config(self, guild_id, public_id, staff_id, transcript_id, role_id, types, message_id=None):
+        self._config_cache.pop(str(guild_id), None)
+        await self._execute("INSERT IGNORE INTO guild_config (guild_id) VALUES (%s)", (str(guild_id),))
+        json_types = json.dumps(types)
+        
+        now_ts = int(datetime.now().timestamp())
+        now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
+        if message_id:
+            await self._execute("""
+                UPDATE guild_config 
+                SET rdv_channel_public=%s, rdv_channel_staff=%s, rdv_channel_transcript=%s, rdv_role_staff=%s, rdv_types=%s, rdv_message_id=%s, updated_at=%s, updated_at_human=%s
+                WHERE guild_id=%s
+            """, (str(public_id), str(staff_id), str(transcript_id), str(role_id), json_types, str(message_id), now_ts, now_str, str(guild_id)))
+        else:
+            await self._execute("""
+                UPDATE guild_config 
+                SET rdv_channel_public=%s, rdv_channel_staff=%s, rdv_channel_transcript=%s, rdv_role_staff=%s, rdv_types=%s, updated_at=%s, updated_at_human=%s
+                WHERE guild_id=%s
+            """, (str(public_id), str(staff_id), str(transcript_id), str(role_id), json_types, now_ts, now_str, str(guild_id)))
+
+    async def get_rdv_config(self, guild_id):
+        r = await self._fetch("SELECT rdv_channel_public, rdv_channel_staff, rdv_channel_transcript, rdv_role_staff, rdv_types, rdv_message_id FROM guild_config WHERE guild_id = %s", (str(guild_id),), one=True)
+        if r:
             return {
-                "total_sessions": len(rows),
-                "total_duration": total_duration_global,
-                "days_analyzed": days_count,
-                "avg_people_per_day": avg_people_per_day,
-                "avg_time_user_day": avg_time_user_day,
-                "avg_time_user_week": avg_time_user_week
+                'public': r['rdv_channel_public'], 'staff': r['rdv_channel_staff'], 'transcript': r['rdv_channel_transcript'],
+                'role': r['rdv_role_staff'], 'types': json.loads(r['rdv_types']) if r['rdv_types'] else [], 'message_id': r['rdv_message_id']
             }
+        return {'public': None, 'staff': None, 'transcript': None, 'role': None, 'types': [], 'message_id': None}
 
-    # --- FONCTIONS STANDARDS ---
+    # --- STATS ---
+    async def get_sessions_history(self, guild_id, days=7):
+        limit = int((datetime.now() - timedelta(days=days)).timestamp() * 1000)
+        return await self._fetch("SELECT * FROM sessions WHERE guild_id = %s AND is_active = 0 AND start_time > %s", (str(guild_id), limit))
 
+    async def get_advanced_server_stats(self, guild_id):
+        rows = await self._fetch("SELECT user_id, total_duration, start_time FROM sessions WHERE guild_id = %s AND is_active = 0", (str(guild_id),))
+        if not rows: return None
+        total = sum((r['total_duration'] or 0) for r in rows)
+        unique = len(set(r['user_id'] for r in rows))
+        dates = set(datetime.fromtimestamp(r['start_time']/1000).date() for r in rows)
+        days = len(dates) if dates else 1
+        return {
+            "total_sessions": len(rows), "total_duration": total, "unique_users": unique, "days_analyzed": days,
+            "avg_people_per_day": unique / days, "avg_time_user_day": (total / unique / days) if unique else 0, "avg_time_user_week": (total / unique) if unique else 0
+        }
+
+    # --- SESSIONS ---
     async def start_session(self, user_id, guild_id, username):
-        now = int(datetime.now().timestamp() * 1000)
-        async with aiosqlite.connect(self.db_name) as db:
-            cur = await db.execute("INSERT INTO sessions (user_id, guild_id, username, start_time) VALUES (?, ?, ?, ?)", (user_id, guild_id, username, now))
-            await db.commit()
-            return cur.lastrowid
+        now_ts = int(datetime.now().timestamp() * 1000)
+        now_human = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        row_id, _ = await self._execute(
+            "INSERT INTO sessions (user_id, guild_id, username, start_time, start_time_human, created_at) VALUES (%s, %s, %s, %s, %s, %s)", 
+            (user_id, guild_id, username, now_ts, now_human, now_ts)
+        )
+        return row_id
 
     async def get_active_session(self, user_id, guild_id):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT * FROM sessions WHERE user_id = ? AND guild_id = ? AND is_active = 1 ORDER BY id DESC LIMIT 1", (user_id, guild_id)) as cur:
-                row = await cur.fetchone()
-                return dict(row) if row else None
+        return await self._fetch("SELECT * FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 1 ORDER BY id DESC LIMIT 1", (user_id, guild_id), one=True)
 
     async def get_all_active_sessions(self, guild_id):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT * FROM sessions WHERE guild_id = ? AND is_active = 1 ORDER BY start_time DESC", (guild_id,)) as cur:
-                return [dict(row) for row in await cur.fetchall()]
+        return await self._fetch("SELECT * FROM sessions WHERE guild_id = %s AND is_active = 1 ORDER BY start_time DESC", (guild_id,))
 
     async def pause_session(self, user_id, guild_id):
-        session = await self.get_active_session(user_id, guild_id)
-        if not session or session['is_paused']: return False
+        s = await self.get_active_session(user_id, guild_id)
+        if not s or s['is_paused']: return False
         now = int(datetime.now().timestamp() * 1000)
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("UPDATE sessions SET is_paused = 1, pause_start = ? WHERE id = ?", (now, session['id']))
-            await db.commit()
+        await self._execute("UPDATE sessions SET is_paused = 1, pause_start = %s WHERE id = %s", (now, s['id']))
         return True
 
     async def resume_session(self, user_id, guild_id):
-        session = await self.get_active_session(user_id, guild_id)
-        if not session or not session['is_paused']: return False
+        s = await self.get_active_session(user_id, guild_id)
+        if not s or not s['is_paused']: return False
         now = int(datetime.now().timestamp() * 1000)
-        pause_dur = now - session['pause_start']
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("UPDATE sessions SET is_paused = 0, pause_start = NULL, pause_duration = pause_duration + ? WHERE id = ?", (pause_dur, session['id']))
-            await db.commit()
+        dur = now - s['pause_start']
+        await self._execute("UPDATE sessions SET is_paused = 0, pause_start = NULL, pause_duration = pause_duration + %s WHERE id = %s", (dur, s['id']))
         return True
 
     async def end_session(self, user_id, guild_id):
-        session = await self.get_active_session(user_id, guild_id)
-        if not session: return None
-        now = int(datetime.now().timestamp() * 1000)
-        total = now - session['start_time']
-        if session['is_paused'] and session['pause_start']:
-            cur_p = now - session['pause_start']
-            total -= (session['pause_duration'] + cur_p)
-            total_pause = session['pause_duration'] + cur_p
-        else:
-            total -= session['pause_duration']
-            total_pause = session['pause_duration']
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("UPDATE sessions SET end_time = ?, total_duration = ?, pause_duration = ?, is_active = 0, is_paused = 0, pause_start = NULL WHERE id = ?", (now, total, total_pause, session['id']))
-            await db.commit()
-        return {**session, 'total_duration': total, 'pause_duration': total_pause, 'end_time': now}
+        s = await self.get_active_session(user_id, guild_id)
+        if not s: return None
+        now_ts = int(datetime.now().timestamp() * 1000)
+        now_human = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        current_pause = (now_ts - s['pause_start']) if s['is_paused'] else 0
+        total_pause = s['pause_duration'] + current_pause
+        total_duration = now_ts - s['start_time'] - total_pause
 
-    async def add_time_adjustment(self, user_id, guild_id, username, duration_ms):
-        now = int(datetime.now().timestamp() * 1000)
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("INSERT INTO sessions (user_id, guild_id, username, start_time, end_time, total_duration, is_active, is_paused) VALUES (?, ?, ?, ?, ?, ?, 0, 0)", (user_id, guild_id, username, now, now, duration_ms))
-            await db.commit()
+        total_human = format_duration(total_duration)
+        pause_human = format_duration(total_pause)
+
+        await self._execute(
+            """UPDATE sessions SET 
+                end_time = %s, end_time_human = %s,
+                total_duration = %s, total_duration_human = %s,
+                pause_duration = %s, pause_duration_human = %s,
+                is_active = 0, is_paused = 0 
+               WHERE id = %s""", 
+            (now_ts, now_human, total_duration, total_human, total_pause, pause_human, s['id'])
+        )
+        return {**s, 'total_duration': total_duration, 'pause_duration': total_pause, 'end_time': now_ts}
+
+    async def add_time_adjustment(self, user_id, guild_id, username, ms):
+        now_ts = int(datetime.now().timestamp() * 1000)
+        now_human = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        dur_human = format_duration(ms)
+        
+        await self._execute(
+            """INSERT INTO sessions 
+               (user_id, guild_id, username, start_time, start_time_human, end_time, end_time_human, total_duration, total_duration_human, is_active, is_paused, created_at) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, %s)""",
+            (user_id, guild_id, username, now_ts, now_human, now_ts, now_human, ms, dur_human, now_ts)
+        )
 
     async def get_user_stats(self, user_id, guild_id):
-        now = int(datetime.now().timestamp() * 1000)
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT username, COUNT(*) as total_sessions, SUM(total_duration) as total_time, AVG(total_duration) as avg_time, MAX(total_duration) as max_time, MIN(total_duration) as min_time FROM sessions WHERE user_id = ? AND guild_id = ? AND is_active = 0 GROUP BY user_id", (user_id, guild_id)) as cur:
-                row = await cur.fetchone()
-                stats = dict(row) if row else {'username': 'Unknown', 'total_sessions': 0, 'total_time': 0, 'avg_time': 0, 'max_time': 0, 'min_time': 0}
-            async with db.execute("SELECT * FROM sessions WHERE user_id = ? AND guild_id = ? AND is_active = 1", (user_id, guild_id)) as cur:
-                active = await cur.fetchone()
-                if active:
-                    current_duration = (active['pause_start'] - active['start_time'] - active['pause_duration']) if active['is_paused'] else (now - active['start_time'] - active['pause_duration'])
-                    stats['total_time'] = (stats['total_time'] or 0) + current_duration
-            return stats
+        r = await self._fetch("""
+            SELECT username, COUNT(*) as total_sessions, SUM(total_duration) as total_time, 
+            AVG(total_duration) as avg_time, MAX(total_duration) as max_time, MIN(total_duration) as min_time,
+            MIN(start_time) as first_service, MAX(start_time) as last_service
+            FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 0 GROUP BY user_id
+        """, (user_id, guild_id), one=True)
+        
+        stats = dict(r) if r else {
+            'username': 'Inconnu', 'total_sessions': 0, 'total_time': 0, 
+            'avg_time': 0, 'max_time': 0, 'min_time': 0, 
+            'first_service': None, 'last_service': None
+        }
+        
+        for k in ['total_time', 'avg_time', 'max_time', 'min_time']:
+            if stats[k] is None: stats[k] = 0
+
+        active = await self._fetch("SELECT start_time, pause_duration, is_paused, pause_start FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 1", (user_id, guild_id), one=True)
+        
+        if active:
+            now = int(datetime.now().timestamp() * 1000)
+            
+            if stats['last_service'] is None or active['start_time'] > stats['last_service']:
+                stats['last_service'] = active['start_time']
+            if stats['first_service'] is None:
+                stats['first_service'] = active['start_time']
+
+            if active['is_paused']:
+                current_session_time = active['pause_start'] - active['start_time'] - active['pause_duration']
+            else:
+                current_session_time = now - active['start_time'] - active['pause_duration']
+            
+            if current_session_time > 0:
+                stats['total_time'] += current_session_time
+                stats['total_sessions'] += 1
+                stats['avg_time'] = stats['total_time'] / stats['total_sessions']
+                if current_session_time > stats['max_time']: stats['max_time'] = current_session_time
+
+        return stats
 
     async def get_all_users_stats(self, guild_id):
-        now = int(datetime.now().timestamp() * 1000)
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT user_id, username, total_duration FROM sessions WHERE guild_id = ? AND is_active = 0", (guild_id,)) as cur:
-                rows = await cur.fetchall()
-            async with db.execute("SELECT user_id, username, start_time, pause_duration, is_paused, pause_start FROM sessions WHERE guild_id = ? AND is_active = 1", (guild_id,)) as cur:
-                active_rows = await cur.fetchall()
-            user_stats = {}
-            for r in rows:
-                uid = r['user_id']
-                if uid not in user_stats: user_stats[uid] = {'username': r['username'], 'total_sessions': 0, 'total_time': 0}
-                user_stats[uid]['total_sessions'] += 1
-                user_stats[uid]['total_time'] += (r['total_duration'] or 0)
-            for r in active_rows:
-                uid = r['user_id']
-                if uid not in user_stats: user_stats[uid] = {'username': r['username'], 'total_sessions': 0, 'total_time': 0}
-                current_duration = (r['pause_start'] - r['start_time'] - r['pause_duration']) if r['is_paused'] else (now - r['start_time'] - r['pause_duration'])
-                user_stats[uid]['total_time'] += current_duration
-            result = []
-            for uid, data in user_stats.items():
-                result.append({'user_id': uid, 'username': data['username'], 'total_sessions': data['total_sessions'], 'total_time': data['total_time']})
-            return sorted(result, key=lambda x: x['total_time'], reverse=True)
+        rows = await self._fetch("SELECT user_id, username, total_duration FROM sessions WHERE guild_id = %s AND is_active = 0", (guild_id,))
+        active = await self._fetch("SELECT user_id, username, start_time, pause_duration, is_paused, pause_start FROM sessions WHERE guild_id = %s AND is_active = 1", (guild_id,))
+        user_stats = {}
+        for r in rows:
+            uid = r['user_id']
+            if uid not in user_stats: user_stats[uid] = {'username': r['username'], 'total_sessions': 0, 'total_time': 0}
+            user_stats[uid]['total_sessions'] += 1
+            user_stats[uid]['total_time'] += (r['total_duration'] or 0)
+        
+        now = int(datetime.now().timestamp()*1000)
+        for r in active:
+            uid = r['user_id']
+            if uid not in user_stats: user_stats[uid] = {'username': r['username'], 'total_sessions': 0, 'total_time': 0}
+            cur_time = (r['pause_start'] - r['start_time'] - r['pause_duration']) if r['is_paused'] else (now - r['start_time'] - r['pause_duration'])
+            user_stats[uid]['total_time'] += cur_time
+        
+        res = [{'user_id': u, 'username': d['username'], 'total_sessions': d['total_sessions'], 'total_time': d['total_time']} for u, d in user_stats.items()]
+        return sorted(res, key=lambda x: x['total_time'], reverse=True)
 
-    async def get_last_sessions(self, user_id, guild_id, limit):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT * FROM sessions WHERE user_id = ? AND guild_id = ? AND is_active = 0 ORDER BY start_time DESC LIMIT ?", (user_id, guild_id, limit)) as cur:
-                return [dict(row) for row in await cur.fetchall()]
+    # --- MODIFICATION ICI (Alias first/last) ---
+    async def get_user_date_range(self, user_id, guild_id):
+        return await self._fetch("SELECT MIN(start_time) as first, MAX(start_time) as last FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 0", (user_id, guild_id), one=True)
+
+    async def get_all_user_sessions(self, user_id, guild_id):
+        return await self._fetch("SELECT * FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 0 ORDER BY start_time DESC", (user_id, guild_id))
 
     async def get_total_active_sessions_count(self):
-        async with aiosqlite.connect(self.db_name) as db:
-            async with db.execute("SELECT COUNT(*) FROM sessions WHERE is_active = 1") as cur:
-                row = await cur.fetchone()
-                return row[0] if row else 0
+        r = await self._fetch("SELECT COUNT(*) as cnt FROM sessions WHERE is_active = 1", one=True)
+        return r['cnt'] if r else 0
 
     async def reset_guild_data(self, guild_id, time_window_ms=None):
-        async with aiosqlite.connect(self.db_name) as db:
-            if time_window_ms:
-                limit = int(datetime.now().timestamp() * 1000) - time_window_ms
-                cur = await db.execute("DELETE FROM sessions WHERE guild_id = ? AND start_time >= ?", (guild_id, limit))
-            else:
-                cur = await db.execute("DELETE FROM sessions WHERE guild_id = ?", (guild_id,))
-            deleted = cur.rowcount
-            await db.commit()
-            return deleted
+        if time_window_ms:
+            limit = int(datetime.now().timestamp() * 1000) - time_window_ms
+            _, count = await self._execute("DELETE FROM sessions WHERE guild_id = %s AND start_time >= %s", (guild_id, limit))
+        else:
+            _, count = await self._execute("DELETE FROM sessions WHERE guild_id = %s", (guild_id,))
+        return count
 
     async def delete_user_data(self, guild_id, user_id):
-        async with aiosqlite.connect(self.db_name) as db:
-            cur = await db.execute("DELETE FROM sessions WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
-            deleted = cur.rowcount
-            await db.commit()
-            return deleted
+        _, count = await self._execute("DELETE FROM sessions WHERE guild_id = %s AND user_id = %s", (guild_id, user_id))
+        return count
 
     async def set_guild_config(self, guild_id, channel_id, message_id, log_channel_id=None, language='fr', direction_role_id=None, min_hours_goal=0, auto_roles_list=None):
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("""
-                INSERT INTO guild_config (guild_id, channel_id, message_id, log_channel_id, language, direction_role_id, min_hours_goal, auto_roles_list, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%s', 'now'))
-                ON CONFLICT(guild_id) DO UPDATE SET
-                    channel_id = excluded.channel_id,
-                    message_id = excluded.message_id,
-                    log_channel_id = excluded.log_channel_id,
-                    language = excluded.language,
-                    direction_role_id = excluded.direction_role_id,
-                    min_hours_goal = excluded.min_hours_goal,
-                    auto_roles_list = excluded.auto_roles_list,
-                    updated_at = strftime('%s', 'now')
-            """, (guild_id, channel_id, message_id, log_channel_id, language, direction_role_id, min_hours_goal, auto_roles_list))
-            await db.commit()
+        self._config_cache.pop(str(guild_id), None)
+        now_ts = int(datetime.now().timestamp())
+        now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        
+        await self._execute("""
+            INSERT INTO guild_config (guild_id, channel_id, message_id, log_channel_id, language, direction_role_id, min_hours_goal, auto_roles_list, updated_at, updated_at_human) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+            ON DUPLICATE KEY UPDATE 
+            channel_id=VALUES(channel_id), message_id=VALUES(message_id), log_channel_id=VALUES(log_channel_id), 
+            language=VALUES(language), direction_role_id=VALUES(direction_role_id), min_hours_goal=VALUES(min_hours_goal), 
+            auto_roles_list=VALUES(auto_roles_list), updated_at=VALUES(updated_at), updated_at_human=VALUES(updated_at_human)
+        """, (guild_id, channel_id, message_id, log_channel_id, language, direction_role_id, min_hours_goal, auto_roles_list, now_ts, now_str))
 
     async def set_maintenance(self, guild_id, active):
-        async with aiosqlite.connect(self.db_name) as db:
-            val = 1 if active else 0
-            await db.execute("UPDATE guild_config SET is_maintenance = ? WHERE guild_id = ?", (val, str(guild_id)))
-            await db.commit()
-            
+        self._config_cache.pop(str(guild_id), None)
+        val = 1 if active else 0
+        await self._execute("UPDATE guild_config SET is_maintenance = %s WHERE guild_id = %s", (val, str(guild_id)))
+
     async def set_global_maintenance(self, active):
-        async with aiosqlite.connect(self.db_name) as db:
-            val = 1 if active else 0
-            await db.execute("UPDATE guild_config SET is_maintenance = ?", (val,))
-            await db.commit()
+        self._config_cache.clear()
+        val = 1 if active else 0
+        await self._execute("UPDATE guild_config SET is_maintenance = %s", (val,))
 
     async def get_guild_config(self, guild_id):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT * FROM guild_config WHERE guild_id = ?", (guild_id,)) as cur:
-                row = await cur.fetchone()
-                return dict(row) if row else None
+        if str(guild_id) in self._config_cache:
+            return self._config_cache[str(guild_id)]
+        row = await self._fetch("SELECT * FROM guild_config WHERE guild_id = %s", (guild_id,), one=True)
+        if row: self._config_cache[str(guild_id)] = row
+        return row
 
     async def get_all_guild_configs(self):
-        async with aiosqlite.connect(self.db_name) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute("SELECT * FROM guild_config") as cur:
-                return [dict(row) for row in await cur.fetchall()]
+        return await self._fetch("SELECT * FROM guild_config")
 
     # --- BLACKLIST ---
-    async def add_blacklist(self, user_id: str):
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("INSERT OR IGNORE INTO blacklist (user_id) VALUES (?)", (user_id,))
-            await db.commit()
+    async def add_blacklist(self, user_id: str, username: str = "Inconnu"):
+        await self._execute("INSERT IGNORE INTO blacklist (user_id, username) VALUES (%s, %s)", (user_id, username))
 
     async def remove_blacklist(self, user_id: str):
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute("DELETE FROM blacklist WHERE user_id = ?", (user_id,))
-            await db.commit()
+        await self._execute("DELETE FROM blacklist WHERE user_id = %s", (user_id,))
 
     async def is_blacklisted(self, user_id: str) -> bool:
-        async with aiosqlite.connect(self.db_name) as db:
-            async with db.execute("SELECT 1 FROM blacklist WHERE user_id = ?", (user_id,)) as cur:
-                return await cur.fetchone() is not None
+        r = await self._fetch("SELECT 1 FROM blacklist WHERE user_id = %s", (user_id,), one=True)
+        return r is not None
