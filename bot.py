@@ -33,7 +33,7 @@ class ChronosBot(commands.Bot):
         self.maintenance_mode = False 
 
     async def setup_hook(self):
-        # 1. Initialisation de la Base de Données (AVEC OPTIMISATION SQL AUTOMATIQUE)
+        # 1. Initialisation de la Base de Données
         await self.db.initialize_database()
         
         # 2. Chargement de l'extension
@@ -128,7 +128,8 @@ class ChronosBot(commands.Bot):
         embed.set_footer(text="Chronis System")
         return await channel.send(embed=embed)
 
-    async def update_service_message(self, guild_id: int, config_data: dict = None):
+    # --- OPTIMISATION ICI : Ajout du param active_sessions ---
+    async def update_service_message(self, guild_id: int, config_data: dict = None, active_sessions: list = None):
         if not config_data:
             config_data = await self.db.get_guild_config(str(guild_id))
         if not config_data: return
@@ -136,8 +137,10 @@ class ChronosBot(commands.Bot):
         try:
             channel = self.get_channel(int(config_data['channel_id']))
             if not channel: return
-                
-            active = await self.db.get_all_active_sessions(str(guild_id))
+            
+            # Si on a déjà les sessions (via commands.py), on les utilise, sinon on requête
+            active = active_sessions if active_sessions is not None else await self.db.get_all_active_sessions(str(guild_id))
+            
             is_maint = int(config_data.get('is_maintenance', 0)) == 1
             lang = config_data.get('language', 'fr')
             
@@ -171,7 +174,7 @@ class ChronosBot(commands.Bot):
 
     @tasks.loop(time=datetime.time(hour=3, minute=0))
     async def scheduled_restart(self):
-        print("⏰ 04h00 : Maintenance automatique...")
+        print("⏰ 04h00 (Heure Locale) : Maintenance automatique...")
         restart_data = {"manual_channel_id": None, "manual_message_id": None, "log_messages": []}
         try:
             configs = await self.db.get_all_guild_configs()

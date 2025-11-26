@@ -10,18 +10,18 @@ OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
 # Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = ID OF YOUR CHANNEL
+DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
 # Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = ID OF THE FEEDBACK ROLE
+DEV_FEEDBACK_ROLE_ID = 1442965292119757037
 # Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = ID FOR THE DEV LOG CHANNEL
+DEV_LOG_CHANNEL_ID = 1441382041831739526
 
 # --- CONFIGURATION BASE DE DONNEES EXTERNE ---
-DB_HOST = "IP OF YOUR DB"       # L'adresse IP (server)
+DB_HOST = "141.94.245.139"       # L'adresse IP (server)
 DB_PORT = 3306                   # Port standard MySQL
-DB_USER = "USERNAME OF UR DB"     # L'utilisateur (uid)
-DB_PASSWORD = "PASSWORD OF UR DB" # Le mot de passe
-DB_NAME = "DB NAME"        # Le nom de la base
+DB_USER = "u3794_5vaJxN8oW2"     # L'utilisateur (uid)
+DB_PASSWORD = "RM4p+w.AVpvMSN4PGjR=onoA" # Le mot de passe
+DB_NAME = "s3794_chronis"        # Le nom de la base
 
 # Liens
 GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
@@ -144,11 +144,11 @@ TRANSLATIONS = {
         # --- ADMIN PAUSE & START ---
         "admin_pause_success": "⏸️ Le service de {user} a été mis en pause par un administrateur.",
         "admin_resume_success": "▶️ Le service de {user} a été relancé par un administrateur.",
-        "admin_start_success": "▶️ Le service de {user} a été démarré de force par un administrateur.", 
+        "admin_start_success": "▶️ Le service de {user} a été démarré de force par un administrateur.", # <-- AJOUT
         "log_admin_pause_title": "⏸️ Pause Forcée",
         "log_admin_resume_title": "▶️ Reprise Forcée",
-        "log_admin_start_title": "▶️ Démarrage Forcé", # 
-        "log_admin_start_desc": "Service forcé par {admin} pour {user}.", 
+        "log_admin_start_title": "▶️ Démarrage Forcé", # <-- AJOUT
+        "log_admin_start_desc": "Service forcé par {admin} pour {user}.", # <-- AJOUT
 
         # --- MAINTENANCE ---
         "maint_embed_title": "🚧 MAINTENANCE EN COURS",
@@ -251,10 +251,10 @@ TRANSLATIONS = {
         
         # --- RDV SYSTEM ---
         "rdv_setup_title": "🏥 Config Rendez-Vous",
-        "rdv_setup_desc": "Configurez les salons et le rôle.\n\n**Motifs actuels :**\n{types}", 
+        "rdv_setup_desc": "Configurez les salons et le rôle.\n\n**Motifs actuels :**\n{types}", # <--- MODIFIÉ
         "rdv_ph_public": "Salon Public (Affichage Panel)",
         "rdv_ph_staff": "Salon Staff (Réception demandes)",
-        "rdv_ph_transcript": "Salon Logs/Transcripts (Staff)", 
+        "rdv_ph_transcript": "Salon Logs/Transcripts (Staff)", # <--- AJOUTÉ
         "rdv_ph_role": "Rôle Médecin/Staff",
         "rdv_btn_add": "Ajouter Motif",
         "rdv_btn_del": "Supprimer Motif",
@@ -311,7 +311,7 @@ TRANSLATIONS = {
         "srv_field_global": "🌍 Données Globales",
         "srv_val_total_time": "• Temps Cumulé : `{val}`",
         "srv_val_sessions": "• Sessions Totales : `{val}`",
-        "srv_val_total_agents": "• Agents Uniques : `{val}`", # 
+        "srv_val_total_agents": "• Agents Uniques : `{val}`", # <--- LIGNE AJOUTÉE
         "srv_field_daily": "📅 Moyennes Journalières",
         "srv_val_people_day": "• Effectif Moyen : `{val} agents/jour`",
         "srv_val_time_day": "• Temps Moyen : `{val}/agent/jour`",
@@ -444,11 +444,11 @@ TRANSLATIONS = {
         # --- ADMIN PAUSE & START ---
         "admin_pause_success": "⏸️ Service of {user} paused by admin.",
         "admin_resume_success": "▶️ Service of {user} resumed by admin.",
-        "admin_start_success": "▶️ Service of {user} force started by admin.", 
+        "admin_start_success": "▶️ Service of {user} force started by admin.", # <-- ADD
         "log_admin_pause_title": "⏸️ Forced Pause",
         "log_admin_resume_title": "▶️ Forced Resume",
-        "log_admin_start_title": "▶️ Forced Start", 
-        "log_admin_start_desc": "Started by {admin} for {user}.", 
+        "log_admin_start_title": "▶️ Forced Start", # <-- ADD
+        "log_admin_start_desc": "Started by {admin} for {user}.", # <-- ADD
 
         # --- LOGS ---
         "log_start_title": "🟢 Service Start", "log_start_desc": "Agent {user} started service.",

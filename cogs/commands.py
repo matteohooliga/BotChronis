@@ -14,6 +14,9 @@ class ServiceCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.db = bot.db
+        # Dictionnaire pour stocker l'état précédent de chaque serveur
+        # Format : {guild_id: "empty" ou "active"}
+        self.last_run_state = {} 
         self.refresh_service.start()
         self.cleanup_absences.start()
 
@@ -35,6 +38,7 @@ class ServiceCommands(commands.Cog):
         except Exception:
             return True 
 
+    # --- TÂCHE DE NETTOYAGE AUTOMATIQUE ---
     @tasks.loop(hours=1)
     async def cleanup_absences(self):
         try:
@@ -42,6 +46,7 @@ class ServiceCommands(commands.Cog):
         except Exception as e:
             print(f"⚠️ Erreur nettoyage absences: {e}")
 
+    # --- OPTIMISATION LOOP (Ta demande) ---
     @tasks.loop(seconds=10)
     async def refresh_service(self):
         try:
@@ -51,10 +56,26 @@ class ServiceCommands(commands.Cog):
             for c in configs:
                 gid = int(c['guild_id'])
                 try:
-                    await self.bot.update_service_message(gid, c)
+                    # 1. On récupère les sessions actives AVANT de toucher à Discord
+                    active_sessions = await self.db.get_all_active_sessions(str(gid))
+                    is_empty = len(active_sessions) == 0
+                    
+                    # 2. Logique d'optimisation
+                    # Si c'est vide ET que la dernière fois c'était déjà vide : ON PASSE (Pas d'update)
+                    if is_empty and self.last_run_state.get(gid) == "empty":
+                        continue
+                    
+                    # 3. Sinon (S'il y a du monde, ou si on vient de passer à 0), on met à jour
+                    # On passe active_sessions pour éviter que le bot refasse une requête DB
+                    await self.bot.update_service_message(gid, c, active_sessions)
+                    
+                    # 4. On sauvegarde l'état pour le prochain tour
+                    self.last_run_state[gid] = "empty" if is_empty else "active"
+
                 except discord.NotFound:
-                    continue
+                    continue 
                 except Exception as e_guild:
+                    # print(f"⚠️ Erreur update service pour {gid}: {e_guild}")
                     pass
         except Exception as e:
             print(f"❌ Erreur critique boucle refresh_service: {e}")
@@ -310,19 +331,15 @@ class ServiceCommands(commands.Cog):
         txt = config.TRANSLATIONS[lang]
         await self.bot.send_log(interaction.guild_id, txt['log_autorole_title'], txt['log_autorole_desc'].format(user=user.mention, admin=interaction.user.mention), config.COLOR_GREEN)
 
-    # --- MODIFICATION ICI (Dates pour /details) ---
     @app_commands.command(name="details", description="Détails utilisateur")
     @app_commands.default_permissions(manage_guild=True)
     async def details(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.defer(ephemeral=False)
         sessions = await self.db.get_all_user_sessions(str(user.id), str(interaction.guild_id))
         if not sessions: return await interaction.followup.send("Aucune donnée", ephemeral=False)
-        
-        # Récupération des dates
         dates = await self.db.get_user_date_range(str(user.id), str(interaction.guild_id))
         first = dates['first'] if dates else None
         last = dates['last'] if dates else None
-        
         view = HistoryPaginationView(sessions, user, first, last, 'fr')
         await interaction.followup.send(embed=view.get_embed(), view=view)
 
