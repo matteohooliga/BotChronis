@@ -14,8 +14,6 @@ class ServiceCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.db = bot.db
-        # Dictionnaire pour stocker l'état précédent de chaque serveur
-        # Format : {guild_id: "empty" ou "active"}
         self.last_run_state = {} 
         self.refresh_service.start()
         self.cleanup_absences.start()
@@ -38,7 +36,6 @@ class ServiceCommands(commands.Cog):
         except Exception:
             return True 
 
-    # --- TÂCHE DE NETTOYAGE AUTOMATIQUE ---
     @tasks.loop(hours=1)
     async def cleanup_absences(self):
         try:
@@ -46,7 +43,6 @@ class ServiceCommands(commands.Cog):
         except Exception as e:
             print(f"⚠️ Erreur nettoyage absences: {e}")
 
-    # --- OPTIMISATION LOOP (Ta demande) ---
     @tasks.loop(seconds=10)
     async def refresh_service(self):
         try:
@@ -56,26 +52,18 @@ class ServiceCommands(commands.Cog):
             for c in configs:
                 gid = int(c['guild_id'])
                 try:
-                    # 1. On récupère les sessions actives AVANT de toucher à Discord
                     active_sessions = await self.db.get_all_active_sessions(str(gid))
                     is_empty = len(active_sessions) == 0
                     
-                    # 2. Logique d'optimisation
-                    # Si c'est vide ET que la dernière fois c'était déjà vide : ON PASSE (Pas d'update)
                     if is_empty and self.last_run_state.get(gid) == "empty":
                         continue
                     
-                    # 3. Sinon (S'il y a du monde, ou si on vient de passer à 0), on met à jour
-                    # On passe active_sessions pour éviter que le bot refasse une requête DB
                     await self.bot.update_service_message(gid, c, active_sessions)
-                    
-                    # 4. On sauvegarde l'état pour le prochain tour
                     self.last_run_state[gid] = "empty" if is_empty else "active"
 
                 except discord.NotFound:
                     continue 
                 except Exception as e_guild:
-                    # print(f"⚠️ Erreur update service pour {gid}: {e_guild}")
                     pass
         except Exception as e:
             print(f"❌ Erreur critique boucle refresh_service: {e}")
@@ -103,17 +91,14 @@ class ServiceCommands(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     async def config_rdv(self, interaction: discord.Interaction):
         conf = await self.db.get_rdv_config(interaction.guild.id)
-        
         types = conf.get('types', [])
         types_str = "\n".join([f"• {t}" for t in types]) if types else "Aucun"
         txt = config.TRANSLATIONS['fr'] 
-        
         embed = discord.Embed(
             title=txt['rdv_setup_title'],
             description=txt['rdv_setup_desc'].format(types=types_str),
             color=config.BOT_COLOR
         )
-        
         await interaction.response.send_message(embed=embed, view=RdvSetupView(self.bot, conf), ephemeral=True)
 
     # --- ABSENCE ---
@@ -126,6 +111,25 @@ class ServiceCommands(commands.Cog):
         try: roles = json.loads(raw) if raw else []
         except: roles = [raw] if raw else []
         await interaction.response.send_modal(AbsenceModal(self.bot, lang, roles))
+
+    # --- NOUVELLE COMMANDE ABSENCES LIST ---
+    @app_commands.command(name="absences_list", description="Liste des absences en cours")
+    async def absences_list(self, interaction: discord.Interaction):
+        absences = await self.db.get_active_absences_details(str(interaction.guild_id))
+        embed = discord.Embed(title="📅 Absences en cours", color=config.BOT_COLOR)
+        
+        if not absences:
+            embed.description = "✅ **Aucune absence en cours.**\nTout le monde est disponible (théoriquement)."
+            embed.color = discord.Color.green()
+        else:
+            lines = []
+            for abs in absences:
+                user_tag = f"<@{abs['user_id']}>"
+                lines.append(f"👤 {user_tag} • Fin le : **{abs['end_date']}**")
+            embed.description = "\n\n".join(lines)
+            embed.set_footer(text=f"Total : {len(absences)} absent(s)")
+            
+        await interaction.response.send_message(embed=embed, ephemeral=False)
 
     # --- GENERAL ---
     @app_commands.command(name="feedback", description="Donner un avis ou signaler un bug")

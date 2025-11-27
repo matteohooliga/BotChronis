@@ -10,18 +10,18 @@ OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
 # Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
+DEV_FEEDBACK_CHANNEL_ID = ID OF YOUR FEEDBACK CHANNEL
 # Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = 1442965292119757037
+DEV_FEEDBACK_ROLE_ID = ID OF YOUR FEEDBACK ROLE
 # Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = 1441382041831739526
+DEV_LOG_CHANNEL_ID = ID OF YOUR LOGS CHANNEL
 
 # --- CONFIGURATION BASE DE DONNEES EXTERNE ---
-DB_HOST = "141.94.245.139"       # L'adresse IP (server)
+DB_HOST = ""       # L'adresse IP (server)
 DB_PORT = 3306                   # Port standard MySQL
-DB_USER = "u3794_5vaJxN8oW2"     # L'utilisateur (uid)
-DB_PASSWORD = "RM4p+w.AVpvMSN4PGjR=onoA" # Le mot de passe
-DB_NAME = "s3794_chronis"        # Le nom de la base
+DB_USER = ""     # L'utilisateur (uid)
+DB_PASSWORD = "" # Le mot de passe
+DB_NAME = ""        # Le nom de la base
 
 # Liens
 GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
@@ -338,52 +338,56 @@ TRANSLATIONS = {
         "srv_label_activity": "Présence Cumulée",
 
 
-        # --- HELP DÉTAILLÉ FR ---
+        # --- HELP DÉTAILLÉ FR (Trié Alphabétiquement) ---
         "help_title": "📚 Aide", "help_desc": "Choisir une catégorie.",
         "help_cat_user": "Utilisateurs", "help_cat_admin": "Administrateur",
         "help_back": "Retour", "help_back_lang": "Langues",
         "help_user_desc": "Commandes publiques :", "help_admin_desc": "Commandes staff :",
         
         "help_cmds_user": (
-            "**• `/sum`**\n"
-            "└ Affiche vos statistiques personnelles (Temps total, moyenne).\n\n"
-            "**• `/sumall`**\n"
-            "└ Affiche le classement général du serveur.\n\n"
-            "**• `/absence`**\n"
-            "└ Formulaire pour déclarer une absence officielle.\n\n"
-            "**• `/feedback`**\n"
-            "└ Envoyer une suggestion ou signaler un bug au développeur.\n\n"
             "**• `/about`**\n"
             "└ Informations techniques du bot.\n\n"
+            "**• `/absence`**\n"
+            "└ Formulaire pour déclarer une absence.\n\n"
+            "**• `/absences_list`**\n"
+            "└ Voir la liste des personnes actuellement absentes.\n\n"
+            "**• `/feedback`**\n"
+            "└ Envoyer une suggestion ou signaler un bug.\n\n"
             "**• `/help`**\n"
-            "└ Affiche ce menu d'aide."
+            "└ Affiche ce menu d'aide.\n\n"
+            "**• `/sum`**\n"
+            "└ Affiche vos statistiques personnelles.\n\n"
+            "**• `/sumall`**\n"
+            "└ Affiche le classement général du serveur."
         ),
         
         "help_cmds_admin": (
-            "**• `/server_stats`**\n"
-            "└ Statistiques avancées du serveur.\n\n"
-            "**• `/presence [salon]`**\n"
-            "└ Liste instantanée des agents (ou recensement réactions).\n\n"
-            "**• `/pauselist`**\n"
-            "└ Affiche la liste des agents en pause.\n\n"
-            "**• `/forcestart [joueur]`**\n"
-            "└ Forcer le début de service d'un agent.\n\n"
-            "**• `/details [joueur]`**\n"
-            "└ Historique détaillé des 10 dernières sessions.\n\n"
-            "**• `/close [joueur]`**\n"
-            "└ Forcer la fin de service d'un agent.\n\n"
-            "**• `/pause [joueur]`**\n"
-            "└ Forcer la pause d'un agent.\n\n"
-            "**• `/edittime`**\n"
-            "└ Corriger manuellement le temps (Ajout/Retrait).\n\n"
+            "**• `/auto_role`**\n"
+            "└ Attribuer manuellement les rôles configurés.\n\n"
             "**• `/cancel [joueur]`**\n"
             "└ Annuler une session sans sauvegarde.\n\n"
+            "**• `/close [joueur]`**\n"
+            "└ Forcer la fin de service d'un agent (sauvegarde).\n\n"
+            "**• `/config_rdv`**\n"
+            "└ Configurer le système de rendez-vous.\n\n"
+            "**• `/details [joueur]`**\n"
+            "└ Historique détaillé des dernières sessions.\n\n"
+            "**• `/edittime`**\n"
+            "└ Modifier manuellement le temps (Ajout/Retrait).\n\n"
+            "**• `/forcestart [joueur]`**\n"
+            "└ Forcer le début de service d'un agent.\n\n"
+            "**• `/pause [joueur]`**\n"
+            "└ Forcer la pause d'un agent.\n\n"
+            "**• `/pauselist`**\n"
+            "└ Affiche la liste des agents en pause.\n\n"
+            "**• `/presence [salon]`**\n"
+            "└ Liste des agents en service.\n\n"
             "**• `/remove_user`**\n"
             "└ Supprimer définitivement le dossier d'un agent.\n\n"
             "**• `/reset_server`**\n"
             "└ Réinitialisation globale (Hebdo/Mensuel).\n\n"
-            "**• `/auto_role`**\n"
-            "└ Attribuer les rôles configuré.\n\n"
+            "**• `/server_stats`**\n"
+            "└ Statistiques et graphiques serveur.\n\n"
             "**• `/setup`**\n"
             "└ Panneau de configuration générale."
         ),
@@ -550,50 +554,50 @@ TRANSLATIONS = {
         "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions closed.",
 
         # --- HELP DETAILED (EN) ---
-        "help_title": "📚 Help", "help_desc": "Select category.", "help_cat_user": "Users", "help_cat_admin": "Admin", "help_back": "Back", "help_back_lang": "Language",
-        
-        "help_user_desc": "**Public Commands:**", 
         "help_cmds_user": (
-            "**• `/sum`**\n"
-            "└ Displays your personal statistics.\n\n"
-            "**• `/sumall`**\n"
-            "└ Displays the server leaderboard.\n\n"
+            "**• `/about`**\n"
+            "└ Technical info & stats.\n\n"
             "**• `/absence`**\n"
-            "└ Form to declare an absence.\n\n"
+            "└ Declare an official absence.\n\n"
+            "**• `/absences_list`**\n"
+            "└ View current active absences.\n\n"
             "**• `/feedback`**\n"
             "└ Send a suggestion or report a bug.\n\n"
-            "**• `/about`**\n"
-            "└ Bot information.\n\n"
             "**• `/help`**\n"
-            "└ Shows this help menu."
+            "└ Show this help menu.\n\n"
+            "**• `/sum`**\n"
+            "└ Display your personal statistics.\n\n"
+            "**• `/sumall`**\n"
+            "└ Display the server leaderboard."
         ),
         
-        "help_admin_desc": "**Staff Commands:**",
         "help_cmds_admin": (
-            "**• `/server_stats`**\n"
-            "└ Advanced server audit.\n\n"
-            "**• `/presence [channel]`**\n"
-            "└ Live list of agents (or reaction census).\n\n"
-            "**• `/pauselist`**\n"
-            "└ List of paused agents.\n\n"
-            "**• `/forcestart [user]`**\n"
-            "└ Force start a session for an agent.\n\n"
-            "**• `/details [user]`**\n"
-            "└ Detailed history of last 10 sessions.\n\n"
-            "**• `/close [user]`**\n"
-            "└ Force close an agent's session.\n\n"
-            "**• `/pause [user]`**\n"
-            "└ Force pause an agent.\n\n"
-            "**• `/edittime`**\n"
-            "└ Manually adjust time (Add/Remove).\n\n"
+            "**• `/auto_role`**\n"
+            "└ Manually assign configured roles.\n\n"
             "**• `/cancel [user]`**\n"
             "└ Cancel a session without saving.\n\n"
+            "**• `/close [user]`**\n"
+            "└ Force close a session (saves time).\n\n"
+            "**• `/config_rdv`**\n"
+            "└ Configure the appointment system.\n\n"
+            "**• `/details [user]`**\n"
+            "└ Detailed history of last 10 sessions.\n\n"
+            "**• `/edittime`**\n"
+            "└ Manually edit time (Add/Remove).\n\n"
+            "**• `/forcestart [user]`**\n"
+            "└ Force start a service session.\n\n"
+            "**• `/pause [user]`**\n"
+            "└ Force pause an agent.\n\n"
+            "**• `/pauselist`**\n"
+            "└ Show agents currently on pause.\n\n"
+            "**• `/presence`**\n"
+            "└ List agents currently on duty.\n\n"
             "**• `/remove_user`**\n"
-            "└ Permanently delete a player's data.\n\n"
+            "└ Permanently delete user data.\n\n"
             "**• `/reset_server`**\n"
-            "└ Global reset (Weekly/Monthly).\n\n"
-            "**• `/auto_role`**\n"
-            "└ Assign configured roles.\n\n"
+            "└ Global data reset (Weekly/Monthly).\n\n"
+            "**• `/server_stats`**\n"
+            "└ Server statistics and graphs.\n\n"
             "**• `/setup`**\n"
             "└ General configuration panel."
         ),

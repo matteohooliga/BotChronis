@@ -120,12 +120,20 @@ class ChronosDatabase:
         """, (str(guild_id),))
         return [str(r['user_id']) for r in rows]
 
+    # --- NOUVELLE FONCTION POUR /absences_list ---
+    async def get_active_absences_details(self, guild_id):
+        return await self._fetch("""
+            SELECT user_id, username, end_date, reason 
+            FROM absences 
+            WHERE guild_id = %s 
+            AND CURDATE() BETWEEN STR_TO_DATE(start_date, '%%d/%%m/%%Y') AND STR_TO_DATE(end_date, '%%d/%%m/%%Y')
+        """, (str(guild_id),))
+
     # --- CONFIG RDV ---
     async def set_rdv_config(self, guild_id, public_id, staff_id, transcript_id, role_id, types, message_id=None):
         self._config_cache.pop(str(guild_id), None)
         await self._execute("INSERT IGNORE INTO guild_config (guild_id) VALUES (%s)", (str(guild_id),))
         json_types = json.dumps(types)
-        
         now_ts = int(datetime.now().timestamp())
         now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
@@ -256,7 +264,6 @@ class ChronosDatabase:
         
         if active:
             now = int(datetime.now().timestamp() * 1000)
-            
             if stats['last_service'] is None or active['start_time'] > stats['last_service']:
                 stats['last_service'] = active['start_time']
             if stats['first_service'] is None:
@@ -272,7 +279,6 @@ class ChronosDatabase:
                 stats['total_sessions'] += 1
                 stats['avg_time'] = stats['total_time'] / stats['total_sessions']
                 if current_session_time > stats['max_time']: stats['max_time'] = current_session_time
-
         return stats
 
     async def get_all_users_stats(self, guild_id):
@@ -295,7 +301,6 @@ class ChronosDatabase:
         res = [{'user_id': u, 'username': d['username'], 'total_sessions': d['total_sessions'], 'total_time': d['total_time']} for u, d in user_stats.items()]
         return sorted(res, key=lambda x: x['total_time'], reverse=True)
 
-    # --- MODIFICATION ICI (Alias first/last) ---
     async def get_user_date_range(self, user_id, guild_id):
         return await self._fetch("SELECT MIN(start_time) as first, MAX(start_time) as last FROM sessions WHERE user_id = %s AND guild_id = %s AND is_active = 0", (user_id, guild_id), one=True)
 
@@ -322,7 +327,6 @@ class ChronosDatabase:
         self._config_cache.pop(str(guild_id), None)
         now_ts = int(datetime.now().timestamp())
         now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        
         await self._execute("""
             INSERT INTO guild_config (guild_id, channel_id, message_id, log_channel_id, language, direction_role_id, min_hours_goal, auto_roles_list, updated_at, updated_at_human) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 

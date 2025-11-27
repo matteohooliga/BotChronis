@@ -168,7 +168,7 @@ class ChronosBot(commands.Bot):
             else:
                 total = await self.db.get_total_active_sessions_count()
                 ping = round(self.latency * 1000)
-                status_text = f"{total} agents actifs | {ping}ms"
+                status_text = f"{total} agents actifs | {ping}ms | /about"
                 await self.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name=status_text))
         except: pass
 
@@ -265,14 +265,26 @@ def main():
 
     @bot.command()
     @commands.is_owner()
-    async def fix_doublons(ctx):
-        msg = await ctx.send("🧹 **Nettoyage des doublons...**")
+    async def sync_global(ctx):
+        msg = await ctx.send("🌍 **Synchronisation Globale en cours...** (Cela peut prendre jusqu'à 1h)")
         try:
-            bot.tree.clear_commands(guild=None)
-            await bot.tree.sync(guild=None)
-            bot.tree.copy_global_to(guild=ctx.guild)
-            synced = await bot.tree.sync(guild=ctx.guild)
-            await msg.edit(content=f"✅ **Doublons nettoyés !** ({len(synced)} cmds)")
+            # On sync sans préciser de "guild", donc c'est pour tout Discord
+            synced = await bot.tree.sync()
+            await msg.edit(content=f"✅ **{len(synced)} commandes synchronisées globalement !**\n(Redémarre ton Discord avec CTRL+R si tu ne les vois pas)")
+        except Exception as e:
+            await msg.edit(content=f"❌ Erreur : `{e}`")
+
+    @bot.command()
+    @commands.is_owner()
+    async def fix_doublons(ctx):
+        msg = await ctx.send("🧹 **Nettoyage violent des doublons...**")
+        try:
+            bot.tree.clear_commands(guild=ctx.guild)
+            await bot.tree.sync(guild=ctx.guild)
+            
+            synced = await bot.tree.sync()
+            
+            await msg.edit(content=f"✅ **Nettoyage terminé !**\nJ'ai supprimé les commandes locales et rechargé les {len(synced)} commandes globales.\n\n👉 **IMPORTANT : Fais CTRL + R maintenant pour voir le résultat.**")
         except Exception as e:
             await msg.edit(content=f"❌ Erreur : `{e}`")
 
