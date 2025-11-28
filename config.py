@@ -17,11 +17,11 @@ DEV_FEEDBACK_ROLE_ID = 1442965292119757037
 DEV_LOG_CHANNEL_ID = 1441382041831739526
 
 # --- CONFIGURATION BASE DE DONNEES EXTERNE ---
-DB_HOST = "141.94.245.139"       # L'adresse IP (server)
+DB_HOST = ""       # L'adresse IP (server)
 DB_PORT = 3306                   # Port standard MySQL
-DB_USER = "u3794_5vaJxN8oW2"     # L'utilisateur (uid)
-DB_PASSWORD = "RM4p+w.AVpvMSN4PGjR=onoA" # Le mot de passe
-DB_NAME = "s3794_chronis"        # Le nom de la base
+DB_USER = ""     # L'utilisateur (uid)
+DB_PASSWORD = "" # Le mot de passe
+DB_NAME = ""        # Le nom de la base
 
 # Liens
 GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
