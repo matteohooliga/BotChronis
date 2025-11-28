@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Imports locaux
 from database import ChronosDatabase
-from views import ServiceButtonsView, RdvPatientView
+from views import ServiceButtonsView, RdvPatientView, RdvStaffView
 from utils import format_duration, create_service_embed
 import config
 
@@ -45,6 +45,7 @@ class ChronosBot(commands.Bot):
             
         # 3. Ajout de la vue persistante GLOBAL
         self.add_view(ServiceButtonsView(self))
+        self.add_view(RdvStaffView(self))
         
         # 4. RESTAURATION DES PANNEAUX RDV
         print("🔄 Restauration des panneaux RDV...")

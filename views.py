@@ -500,27 +500,75 @@ class RdvPatientView(discord.ui.View):
         except: pass
 
 class RdvStaffView(discord.ui.View):
-    def __init__(self, bot, user_id, rdv_type, info, lang):
+    def __init__(self, bot, user_id=None, rdv_type=None, info=None, lang='fr'):
         super().__init__(timeout=None)
         self.bot = bot
         self.user_id = user_id
         self.rdv_type = rdv_type
         self.info = info
         self.lang = lang
-        txt = config.TRANSLATIONS[lang]
+        
+        txt = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
+        
+        # ICI : J'AI REMIS "rdv_accept" pour que les VIEUX messages fonctionnent aussi
         b_acc = discord.ui.Button(label=txt.get('rdv_btn_accept', "Accepter"), style=discord.ButtonStyle.success, custom_id="rdv_accept")
         b_acc.callback = self.accept
         self.add_item(b_acc)
+        
+        # ICI : "rdv_refuse" pour les VIEUX messages
         b_ref = discord.ui.Button(label=txt.get('rdv_btn_refuse', "Refuser"), style=discord.ButtonStyle.danger, custom_id="rdv_refuse")
         b_ref.callback = self.refuse
         self.add_item(b_ref)
 
+    async def _get_data(self, interaction):
+        # 1. Si on a les données en mémoire (cas normal sans restart), on les renvoie
+        if self.user_id and self.rdv_type:
+            return self.user_id, self.rdv_type, self.info, self.lang
+
+        # 2. Sinon, on essaie de reconstruire les données à partir du message (Embed)
+        try:
+            # Récupération de la config langue depuis la DB
+            conf_guild = await self.bot.db.get_guild_config(str(interaction.guild_id))
+            lang = conf_guild.get('language', 'fr') if conf_guild else 'fr'
+
+            embed = interaction.message.embeds[0]
+            
+            # L'ID du patient est stocké dans le footer "ID: 123456789"
+            footer_text = embed.footer.text
+            user_id = int(footer_text.replace("ID:", "").strip())
+            
+            # Le Type et l'Info sont dans la description
+            desc = embed.description
+            rdv_type = "Inconnu"
+            info = "Non spécifié"
+            
+            # Parsing simple de la description
+            for line in desc.split('\n'):
+                if "**Type**" in line:
+                    rdv_type = line.split(":", 1)[1].strip()
+                if "**Info**" in line:
+                    info = line.split(":", 1)[1].strip()
+                    
+            return user_id, rdv_type, info, lang
+        except Exception as e:
+            print(f"❌ Erreur récupération données RDV : {e}")
+            return None, None, None, 'fr'
+
     async def accept(self, interaction: discord.Interaction):
-        txt = config.TRANSLATIONS[self.lang]
-        guild = interaction.guild
-        try: user = guild.get_member(int(self.user_id)) or await guild.fetch_member(int(self.user_id))
-        except: return await interaction.response.send_message("Utilisateur introuvable.", ephemeral=True)
+        # On récupère les données via la méthode sécurisée
+        user_id, rdv_type, info, lang = await self._get_data(interaction)
         
+        if not user_id:
+            return await interaction.response.send_message("❌ Erreur : Impossible de retrouver le dossier (Données illisibles).", ephemeral=True)
+
+        txt = config.TRANSLATIONS[lang]
+        guild = interaction.guild
+        try: 
+            user = guild.get_member(user_id) or await guild.fetch_member(user_id)
+        except: 
+            return await interaction.response.send_message("⚠️ Utilisateur introuvable (a peut-être quitté le serveur).", ephemeral=True)
+        
+        # --- Logique de création du salon ---
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             user: discord.PermissionOverwrite(read_messages=True),
@@ -539,14 +587,16 @@ class RdvStaffView(discord.ui.View):
         cat = discord.utils.get(guild.categories, name="Rendez-Vous")
         if not cat: cat = await guild.create_category("Rendez-Vous")
         
-        chan_name = f"rdv-{user.name}-{self.rdv_type}"
-        chan_name = chan_name.replace(" ", "-").lower()
-        topic_info = f"Patient: {user.id} | Staff: {interaction.user.id} | Type: {self.rdv_type}"
+        chan_name = f"rdv-{user.name}-{rdv_type}"
+        chan_name = chan_name.replace(" ", "-").lower()[:99] # Sécurité longueur
+        topic_info = f"Patient: {user.id} | Staff: {interaction.user.id} | Type: {rdv_type}"
         
         channel = await guild.create_text_channel(chan_name, category=cat, overwrites=overwrites, topic=topic_info)
-        welcome_msg = txt.get('rdv_ticket_welcome', "Bienvenue").format(user=user.mention, role=role_mention, type=self.rdv_type, info=self.info)
-        await channel.send(welcome_msg, view=RdvTicketView(self.bot, self.lang))
         
+        welcome_msg = txt.get('rdv_ticket_welcome', "Bienvenue").format(user=user.mention, role=role_mention, type=rdv_type, info=info)
+        await channel.send(welcome_msg, view=RdvTicketView(self.bot, lang))
+        
+        # Mise à jour du message staff
         await interaction.message.edit(view=None, content=txt.get('rdv_accepted', "Accepté").format(staff=interaction.user.mention, channel=channel.mention), embed=interaction.message.embeds[0])
 
         if conf.get('transcript'):
@@ -555,13 +605,14 @@ class RdvStaffView(discord.ui.View):
                 if log_chan:
                     embed_log = discord.Embed(title=txt.get('rdv_log_accepted_title', "RDV Accepté"), color=discord.Color.green())
                     embed_log.description = txt.get('rdv_log_accepted_desc', "Accepté par {staff}").format(staff=interaction.user.mention, patient=user.mention)
-                    embed_log.add_field(name="Type", value=self.rdv_type)
+                    embed_log.add_field(name="Type", value=rdv_type)
                     embed_log.timestamp = datetime.now()
                     await log_chan.send(embed=embed_log)
             except: pass
 
     async def refuse(self, interaction: discord.Interaction):
-        txt = config.TRANSLATIONS[self.lang]
+        _, _, _, lang = await self._get_data(interaction)
+        txt = config.TRANSLATIONS[lang]
         await interaction.message.edit(view=None, content=txt.get('rdv_refused', "Refusé par {user}.").format(user=interaction.user.mention), embed=interaction.message.embeds[0])
 
 class RdvTicketView(discord.ui.View):

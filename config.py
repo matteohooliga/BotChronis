@@ -10,18 +10,18 @@ OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
 # Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = ID OF YOUR FEEDBACK CHANNEL
+DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
 # Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = ID OF YOUR FEEDBACK ROLE
+DEV_FEEDBACK_ROLE_ID = 1442965292119757037
 # Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = ID OF YOUR LOGS CHANNEL
+DEV_LOG_CHANNEL_ID = 1441382041831739526
 
 # --- CONFIGURATION BASE DE DONNEES EXTERNE ---
-DB_HOST = ""       # L'adresse IP (server)
+DB_HOST = "141.94.245.139"       # L'adresse IP (server)
 DB_PORT = 3306                   # Port standard MySQL
-DB_USER = ""     # L'utilisateur (uid)
-DB_PASSWORD = "" # Le mot de passe
-DB_NAME = ""        # Le nom de la base
+DB_USER = "u3794_5vaJxN8oW2"     # L'utilisateur (uid)
+DB_PASSWORD = "RM4p+w.AVpvMSN4PGjR=onoA" # Le mot de passe
+DB_NAME = "s3794_chronis"        # Le nom de la base
 
 # Liens
 GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
@@ -73,6 +73,10 @@ TRANSLATIONS = {
         # --- PANNEAU SETUP (/setup) ---
         "setup_panel_title": "🛠️ Panneau de Configuration",
         "setup_panel_desc": "Configurez Chronis via les menus ci-dessous. Cliquez **Valider** lorsque vous avez terminé.",
+        "setup_panel_desc_1": "PAGE 1/2 : **Général**\nConfigurez la langue et les salons.",
+        "setup_panel_desc_2": "PAGE 2/2 : **Rôles**\nConfigurez les rôles spéciaux.",
+        "setup_btn_next": "Suivant ➡️", 
+        "setup_btn_back": "⬅️ Retour",
         "setup_ph_lang": "🌍 Choisir la langue",
         "setup_ph_service": "📢 Salon  Prise de Service (Actuel : {val})",
         "setup_ph_logs": "📜 Salon Logs (Actuel : {val})",
@@ -88,6 +92,7 @@ TRANSLATIONS = {
         "log_setup_desc": "Ce salon recevra désormais les logs d'activité.",
         "setup_role": "\nRôle Direction : {role}.",
         "setup_val_none": "Aucun",
+        
 
         # --- MESSAGES DE SERVICE ---
         "service_started": "✅ **Service démarré** ! Bon courage.",
@@ -180,38 +185,13 @@ TRANSLATIONS = {
         "error_no_message": "❌ Aucun message trouvé dans ce salon.",
         "error_channel_type": "❌ Ce salon n'est pas textuel.",
 
-        # --- LOGS GÉNÉRAUX ---
-        "log_start_title": "🟢 Prise de Service", "log_start_desc": "L'agent {user} a pris son service.",
-        "log_pause_title": "⏸️ Mise en Pause", "log_pause_desc": "L'agent {user} s'est mis en pause.",
-        "log_resume_title": "▶️ Reprise de Service", "log_resume_desc": "L'agent {user} a repris son service.",
-        "log_stop_title": "🛑 Fin de Service", "log_stop_desc": "L'agent {user} a terminé son service.",
-        
-        "log_force_close_title": "🔧 Fermeture Forcée", 
-        "log_force_close_desc": "La session de {user} a été fermée par {admin}.",
-        
-        "log_edit_time_title": "📈 Temps Modifié", 
-        "log_edit_time_desc": "Modification manuelle par {admin}.",
-        
-        "log_reset_title": "⚠️ Réinitialisation Totale", 
-        "log_reset_desc": "Serveur réinitialisé par {admin}.",
-        
-        "log_cancel_title": "🗑️ Annulation de Service", 
-        "log_cancel_desc": "Session annulée par {admin} pour {user}.",
-        
-        "log_remove_title": "👤 Dossier Supprimé", 
-        "log_remove_desc": "Données de {user} supprimées par {admin}.",
-        
-        "log_autorole_title": "🏆 Attribution Rôle", 
-        "log_autorole_desc": "Rôles donnés à {user} par {admin}.",
-        
-        "log_admin_pause_desc": "Pause forcée par {admin}.",
-        "log_admin_resume_desc": "Reprise forcée par {admin}.",
-        
-        "cancel_success": "🗑️ Session annulée et supprimée.",
-
-        "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Redémarrage auto.",
-        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Arrêt manuel.",
-        "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Bot en ligne.",
+        # --- DELROLE & LOGS ---
+        "setup_ph_citizen": "👤 Rôle Citoyen",
+        "log_delrole_title": "🧹 Razzia des Rôles (Wipe)",
+        "log_delrole_desc": "Tous les rôles de {user} ont été retirés par {admin}.\n**Rôle conservé :** <@&{citizen}>",
+        "delrole_success": "✅ **Wipe effectué** sur {user}.\n🗑️ **{count}** rôles retirés.",
+        "delrole_error_config": "❌ Erreur : Le **Rôle Citoyen** n'est pas configuré dans `/setup` (Page 2).",
+        "delrole_no_roles": "⚠️ Cet utilisateur n'avait aucun rôle à retirer.",
         
         # --- ADMIN COMMANDS (+) ---
         "cmd_sync_start": "⏳ **Synchronisation en cours...**",
@@ -246,8 +226,6 @@ TRANSLATIONS = {
         "fb_bug_media": "Lien image",
         "fb_log_bug_title": "🐛 Bug Reçu",
         "fb_field_media": "Preuve",
-
-        # Dans TRANSLATIONS['fr'] :
         
         # --- RDV SYSTEM ---
         "rdv_setup_title": "🏥 Config Rendez-Vous",
@@ -369,6 +347,8 @@ TRANSLATIONS = {
             "**• `/close [joueur]`**\n"
             "└ Forcer la fin de service d'un agent (sauvegarde).\n\n"
             "**• `/config_rdv`**\n"
+            "**• `/delrole [joueur]`**\n"
+            "└ Retirer tous les rôles sauf Citoyen.\n\n"
             "└ Configurer le système de rendez-vous.\n\n"
             "**• `/details [joueur]`**\n"
             "└ Historique détaillé des dernières sessions.\n\n"
@@ -391,6 +371,39 @@ TRANSLATIONS = {
             "**• `/setup`**\n"
             "└ Panneau de configuration générale."
         ),
+
+        # --- LOGS GÉNÉRAUX ---
+        "log_start_title": "🟢 Prise de Service", "log_start_desc": "L'agent {user} a pris son service.",
+        "log_pause_title": "⏸️ Mise en Pause", "log_pause_desc": "L'agent {user} s'est mis en pause.",
+        "log_resume_title": "▶️ Reprise de Service", "log_resume_desc": "L'agent {user} a repris son service.",
+        "log_stop_title": "🛑 Fin de Service", "log_stop_desc": "L'agent {user} a terminé son service.",
+        
+        "log_force_close_title": "🔧 Fermeture Forcée", 
+        "log_force_close_desc": "La session de {user} a été fermée par {admin}.",
+        
+        "log_edit_time_title": "📈 Temps Modifié", 
+        "log_edit_time_desc": "Modification manuelle par {admin}.",
+        
+        "log_reset_title": "⚠️ Réinitialisation Totale", 
+        "log_reset_desc": "Serveur réinitialisé par {admin}.",
+        
+        "log_cancel_title": "🗑️ Annulation de Service", 
+        "log_cancel_desc": "Session annulée par {admin} pour {user}.",
+        
+        "log_remove_title": "👤 Dossier Supprimé", 
+        "log_remove_desc": "Données de {user} supprimées par {admin}.",
+        
+        "log_autorole_title": "🏆 Attribution Rôle", 
+        "log_autorole_desc": "Rôles donnés à {user} par {admin}.",
+        
+        "log_admin_pause_desc": "Pause forcée par {admin}.",
+        "log_admin_resume_desc": "Reprise forcée par {admin}.",
+        
+        "cancel_success": "🗑️ Session annulée et supprimée.",
+
+        "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Redémarrage auto.",
+        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Arrêt manuel.",
+        "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Bot en ligne.",
         
         # --- ERREURS ---
         "error_generic": "❌ Erreur système.", "error_perms": "⛔ Permission refusée.", "error_admin_only": "⛔ Admin seulement.",
@@ -398,125 +411,235 @@ TRANSLATIONS = {
         "role_added": "✅ Rôle {role} ajouté à {user}."
     },
     "en": {
-        # --- GENERAL ---
-        "btn_invite": "Invite", "btn_source": "Source", "btn_support": "Support", "btn_feedback": "Feedback", "btn_refresh": "Refresh",
-        "btn_start": "Start", "btn_pause": "Pause", "btn_stop": "Stop", "btn_next": "Next >>", "btn_prev": "<< Prev",
-        
-        # --- SETUP ---
-        "setup_panel_title": "🛠️ Config Panel",
-        "setup_panel_desc": "Configure below. Click **Validate** when done.",
-        "setup_ph_lang": "🌍 Language",
-        "setup_ph_service": "📢 Service Channel", "setup_ph_logs": "📜 Logs Channel", "setup_ph_role": "👔 Direction Role",
-        "setup_ph_goal": "🎯 Goal", "setup_ph_autorole": "🏆 Auto Role", "setup_btn_save": "Save",
-        "setup_err_no_service": "❌ Error: Service Channel required!", "setup_success": "✅ **Saved!**\nPanel sent to {channel}.",
-        "log_setup_title": "✅ Config Saved", "log_setup_desc": "Logs enabled.", "setup_complete": "✅ Complete",
-        "setup_logs": "\nLogs active.", "setup_role": "\nRole: {role}.", "setup_val_none": "None",
-        
-        # --- SERVICE ---
-        "service_started": "✅ **Service started!**",
-        "service_already_started": "⚠️ You are already on duty!",
-        "service_paused": "⏸️ **Paused!**",
-        "service_resumed": "▶️ **Resumed!**",
-        "service_not_started": "⚠️ You must start service first!",
-        "service_stopped": "🛑 **Ended!**\n\n**Total**: {duration}\n**Pause**: {pause}\n**Effective**: {effective}",
-        "service_forced_stop": "🔧 **Force closed** for {user}.\n**Duration**: {duration}",
-        "no_active_session": "❌ No active session.",
-        "embed_title": "🔍 Users on Duty", "embed_empty": "No users on duty... 😢", "embed_since": "• Since",
+        # --- GENERAL BUTTONS ---
+        "btn_invite": "Invite Bot",
+        "btn_source": "Source Code",
+        "btn_support": "Support",
+        "btn_feedback": "Review / Bug",
+        "btn_refresh": "Refresh",
+        "btn_start": "Start Service",
+        "btn_pause": "Pause / Resume Service",
+        "btn_stop": "End Service",
+        "btn_next": "Next Page >>",
+        "btn_prev": "<< Previous Page",
 
-        # --- STATS ---
-        "stats_title": "📊 Statistics: {name}", "stats_no_data": "No data found.", "global_title": "📊 Global Leaderboard",
-        "stats_fields": ["Sessions", "Total", "Avg", "Max", "Min"], "global_fields": ["Total Sessions", "Cumulative Time", "Users"],
-        "goal_warning_title": "🚨 GOAL MISSED", "goal_warning_desc": "Warning: Time is under target ({goal}).",
+        # --- SETUP PANEL (/setup) ---
+        "setup_panel_title": "🛠️ Configuration Panel",
+        "setup_panel_desc": "Configure Chronis via the menus below. Click **Validate** when finished.",
+        "setup_panel_desc_1": "PAGE 1/2: **General**\nConfigure language and channels.",
+        "setup_panel_desc_2": "PAGE 2/2: **Roles**\nConfigure special roles.",
+        "setup_btn_next": "Next ➡️", 
+        "setup_btn_back": "⬅️ Back",
+        "setup_ph_lang": "🌍 Choose Language",
+        "setup_ph_service": "📢 Service Channel (Current: {val})",
+        "setup_ph_logs": "📜 Logs Channel (Current: {val})",
+        "setup_ph_role": "👔 Direction Role (Current: {val})",
+        "setup_ph_autorole": "🏆 Auto Role (Current: {val})",
+        "setup_ph_goal": "🎯 Weekly Goal",
+        "setup_btn_save": "Validate Configuration",
+        "setup_err_no_service": "❌ Error: You must select a Service Channel!",
+        "setup_success": "✅ **Configuration saved!**\nThe service panel has been sent to {channel}.",
+        "setup_complete": "✅ Config Complete",
+        "setup_logs": "\nLogs enabled.",
+        "log_setup_title": "✅ Logs Config",
+        "log_setup_desc": "This channel will now receive activity logs.",
+        "setup_role": "\nDirection Role: {role}.",
+        "setup_val_none": "None",
+
+        # --- SERVICE MESSAGES ---
+        "service_started": "✅ **Service started!** Good luck.",
+        "service_already_started": "⚠️ You are already on duty!",
+        "service_paused": "⏸️ **Pause started!**",
+        "service_resumed": "▶️ **Service resumed!**",
+        "service_not_started": "⚠️ You must start your service first!",
+        "service_stopped": "🛑 **Service ended!**\n\n**Total**: {duration}\n**Pause**: {pause}\n**Effective**: {effective}",
+        "service_forced_stop": "🔧 **Force closed** for {user}.\n**Duration**: {duration}",
+        "no_active_session": "❌ No active session found.",
+        "embed_title": "🔍 Users on Duty",
+        "embed_empty": "No users on duty... 😢",
+        "embed_since": "• Since",
+
+        # --- STATISTICS ---
+        "stats_title": "📊 Statistics: {name}",
+        "stats_no_data": "No data recorded.",
+        "global_title": "📊 Global Server Leaderboard",
+        "stats_fields": ["Sessions", "Total Time", "Average", "Max", "Min"],
+        "global_fields": ["Total Sessions", "Cumulative Time", "Users"],
+        "goal_warning_title": "🚨 GOAL MISSED",
+        "goal_warning_desc": "Warning: Your time is under the target ({goal}).",
         
         # --- DETAILS ---
-        "det_title": "📄 Report: {user}",
+        "det_title": "📄 Detailed Report: {user}",
         "det_stats": "📊 Statistics",
         "det_history": "📜 Session History ({count})",
-        "det_range": "🗓️ **Activity Range**\n**First Shift**: {first}\n**Last Shift**: {last}\n\n",
+        "det_range": "🗓️ **Activity Period**\n**First Shift**: {first}\n**Last Shift**: {last}\n\n",
         "det_type_service": "🟢 Service",
-        "det_type_adjust": "🔧 Adjustment",
-        
-        # --- EDIT TIME ---
-        "edit_title": "⏱️ Time Edited", "edit_success": "✅ Edited for {user}.", "edit_desc": "Manual time adjustment.",
-        "edit_field_action": "Action", "edit_field_amount": "Amount", "edit_field_new_total": "New Total",
-        "edit_field_old": "Old Total", "edit_field_admin": "Admin", "edit_field_target": "User",
-        "time_added": "Added", "time_removed": "Removed",
-        "et_view_title": "⏱️ Edit Time", "et_view_desc": "Choose action for {user}.", "et_btn_add": "Add", "et_btn_remove": "Remove",
-        "et_modal_add": "Add Time", "et_modal_remove": "Remove Time", "et_label_hours": "Hours", "et_label_minutes": "Minutes",
-        "et_label_seconds": "Seconds", "et_placeholder": "0",
+        "det_type_adjust": "🔧 Admin Adjustment",
+
+        # --- TIME EDITING ---
+        "edit_success": "✅ Time modified for {user}.",
+        "edit_desc": "Service time was modified manually.",
+        "edit_field_action": "Action",
+        "edit_field_amount": "Amount",
+        "edit_field_new_total": "New Total",
+        "edit_field_old": "Old Total",
+        "edit_field_admin": "Moderator",
+        "edit_field_target": "Target",
+        "time_added": "Addition (+)", 
+        "time_removed": "Deduction (-)",
+        "et_view_title": "⏱️ Time Modification",
+        "et_view_desc": "What do you want to do with {user}'s service time?",
+        "et_btn_add": "Add (+)",
+        "et_btn_remove": "Remove (-)",
+        "et_modal_add": "Add Time",
+        "et_modal_remove": "Remove Time",
+        "et_label_hours": "Hours",
+        "et_label_minutes": "Minutes",
+        "et_label_seconds": "Seconds",
+        "et_placeholder": "0",
 
         # --- ADMIN PAUSE & START ---
-        "admin_pause_success": "⏸️ Service of {user} paused by admin.",
-        "admin_resume_success": "▶️ Service of {user} resumed by admin.",
-        "admin_start_success": "▶️ Service of {user} force started by admin.", # <-- ADD
+        "admin_pause_success": "⏸️ {user}'s service was paused by an administrator.",
+        "admin_resume_success": "▶️ {user}'s service was resumed by an administrator.",
+        "admin_start_success": "▶️ {user}'s service was force started by an administrator.",
         "log_admin_pause_title": "⏸️ Forced Pause",
         "log_admin_resume_title": "▶️ Forced Resume",
-        "log_admin_start_title": "▶️ Forced Start", # <-- ADD
-        "log_admin_start_desc": "Started by {admin} for {user}.", # <-- ADD
-
-        # --- LOGS ---
-        "log_start_title": "🟢 Service Start", "log_start_desc": "Agent {user} started service.",
-        "log_pause_title": "⏸️ Pause", "log_pause_desc": "Agent {user} paused.",
-        "log_resume_title": "▶️ Resume", "log_resume_desc": "Agent {user} resumed.",
-        "log_stop_title": "🛑 Service End", "log_stop_desc": "Agent {user} ended service.",
-        
-        "log_force_close_title": "🔧 Force Close", "log_force_close_desc": "Session closed by {admin} for {user}.",
-        "log_edit_time_title": "📈 Time Edited", "log_edit_time_desc": "Manual edit by {admin}.",
-        "log_reset_title": "⚠️ Reset", "log_reset_desc": "Server reset by {admin}.",
-        "log_cancel_title": "🗑️ Cancelled", "log_cancel_desc": "Session cancelled by {admin} for {user}.",
-        "log_remove_title": "👤 Deleted", "log_remove_desc": "Data for {user} deleted by {admin}.",
-        "log_autorole_title": "🏆 Role Added", "log_autorole_desc": "Roles given to {user} by {admin}.",
-        "log_admin_pause_desc": "Paused by {admin}.", "log_admin_resume_desc": "Resumed by {admin}.",
-
-        "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Auto restart.",
-        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Manual stop.",
-        "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Bot online.",
-        
-        # --- ADMIN CMD ---
-        "cmd_sync_start": "⏳ Syncing...", "cmd_sync_end": "✅ Synced ({count} cmds).",
-        "cmd_restart_start": "👋 Restarting...", "cmd_restart_end": "✅ Online.",
-        "log_sync_title": "🔄 Sync", "log_restart_title": "🔄 Restart", "log_sync_desc": "By {user}.",
-        "log_restart_desc": "By {user}.", "log_stat_wip": "WIP...", "log_stat_done": "Done", "log_footer_done": "Done at {date}",
+        "log_admin_start_title": "▶️ Forced Start",
+        "log_admin_start_desc": "Service forced by {admin} for {user}.",
 
         # --- MAINTENANCE ---
-        "maint_embed_title": "🚧 MAINTENANCE", "maint_embed_desc": "System locked.",
-        "maint_enabled": "🟠 **Maintenance ON**.", "maint_disabled": "🟢 **Maintenance OFF**.",
-        "maint_block_msg": "⛔ **Maintenance** : Locked.",
+        "maint_embed_title": "🚧 MAINTENANCE IN PROGRESS",
+        "maint_embed_desc": "The system is temporarily locked for maintenance.\nService starts are disabled.",
+        "maint_enabled": "🟠 **Maintenance Mode ON**.",
+        "maint_disabled": "🟢 **Maintenance Mode OFF**.",
+        "maint_block_msg": "⛔ **Maintenance**: System locked.",
 
-        # --- MISC LOGS ---
-        "log_guild_join_title": "➕ New Guild", "log_guild_join_desc": "Bot added.", "log_guild_join_name": "Name", "log_guild_join_id": "ID",
-        "log_guild_join_owner": "Owner", "log_guild_join_members": "Members",
-        "bl_add_success": "⛔ **{user}** Blacklisted.", "bl_remove_success": "✅ **{user}** Unblacklisted.",
-        "bl_already": "⚠️ Already listed.", "bl_not_found": "⚠️ Not found.", "bl_error": "⛔ **Access Denied**.",
-        "infos_title": "📊 Infos", "infos_desc": "On **{count}** guilds.",
+        # --- SERVER LOGS ---
+        "log_guild_join_title": "➕ New Server",
+        "log_guild_join_desc": "Bot added to a server.",
+        "log_guild_join_name": "Name",
+        "log_guild_join_id": "ID",
+        "log_guild_join_owner": "Owner",
+        "log_guild_join_members": "Members",
         
-        # --- PRESENCE ---
-        "pres_react_title": "📊 Census", "pres_react_desc": "Reactions in {channel}.", "pres_react_empty": "⚠️ None.",
-        "error_no_message": "❌ No message.", "error_channel_type": "❌ Not text channel.",
+        # --- BLACKLIST ---
+        "bl_add_success": "⛔ **{user}** has been added to the Blacklist.",
+        "bl_remove_success": "✅ **{user}** has been removed from the Blacklist.",
+        "bl_already": "⚠️ This user is already blacklisted.",
+        "bl_not_found": "⚠️ This user is not in the blacklist.",
+        "bl_error": "⛔ **Access Denied**: You are blacklisted.",
+        "infos_title": "📊 Bot Information", "infos_desc": "Bot is present on **{count}** servers.",
 
-        # --- MODALS ---
-        "feedback_modal_title": "Feedback", "feedback_subject": "Subject", "feedback_label": "Details",
-        "feedback_placeholder": "...", "feedback_sent": "✅ Sent!", "feedback_error": "❌ Error.",
-        "log_new_feedback": "📨 Feedback", "fb_select_placeholder": "Type...", "fb_opt_review": "Review", "fb_opt_bug": "Bug",
-        "fb_review_title": "Review", "fb_bug_title": "Bug", "fb_field_rating": "Rating", "fb_field_media": "Proof",
+        # --- REACTION PRESENCE ---
+        "pres_react_title": "📊 Reaction List",
+        "pres_react_desc": "List of users who reacted to the last message in {channel}.",
+        "pres_react_empty": "⚠️ No reactions found on the last message.",
+        "error_no_message": "❌ No message found in this channel.",
+        "error_channel_type": "❌ This is not a text channel.",
+
+        # --- DELROLE & LOGS ---
+        "setup_ph_citizen": "👤 Citizen Role",
+        "log_delrole_title": "🧹 Role Wipe",
+        "log_delrole_desc": "All roles from {user} were removed by {admin}.\n**Kept Role:** <@&{citizen}>",
+        "delrole_success": "✅ **Wipe complete** for {user}.\n🗑️ **{count}** roles removed.",
+        "delrole_error_config": "❌ Error: **Citizen Role** is not configured in `/setup` (Page 2).",
+        "delrole_no_roles": "⚠️ This user had no roles to remove.",
         
-        "abs_modal_title": "Absence", "abs_start_label": "Start", "abs_end_label": "End", "abs_reason_label": "Reason",
-        "abs_start_ph": "DD/MM/YYYY", "abs_end_ph": "DD/MM/YYYY", "abs_reason_ph": "...", "abs_embed_title": "📅 Absence",
-        "abs_field_dates": "Dates", "abs_field_duration": "Duration", "abs_field_reason": "Reason",
-        "abs_error_format": "❌ Bad Date.", "abs_error_logic": "❌ End < Start.", "abs_user_field": "👤 Agent",
-        "sumall_tag_absence": "🚫 [Absent]",
-
+        # --- ADMIN COMMANDS (+) ---
+        "cmd_sync_start": "⏳ **Syncing in progress...**",
+        "cmd_sync_end": "✅ **Sync complete!** ({count} commands)",
+        "cmd_restart_start": "👋 **Restarting in progress...**",
+        "cmd_restart_end": "✅ **Restart complete!**",
+        "log_sync_title": "🔄 Sync", "log_sync_desc": "By {user}.",
+        "log_restart_title": "🔄 Restart", "log_restart_desc": "By {user}.",
+        "log_stat_wip": "In progress...", "log_stat_done": "Done",
+        "log_footer_done": "Finished on {date}",
+        
+        # --- FEEDBACK ---
+        "feedback_modal_title": "Send Feedback",
+        "feedback_subject": "Subject",
+        "feedback_label": "Message",
+        "feedback_placeholder": "Details...",
+        "feedback_sent": "✅ Sent!",
+        "feedback_error": "❌ Error.",
+        "log_new_feedback": "📨 New Report",
+        "fb_select_placeholder": "Type...",
+        "fb_opt_review": "Review",
+        "fb_opt_bug": "Bug",
+        "fb_review_title": "Review",
+        "fb_review_subject": "Title",
+        "fb_review_rating": "Rating (1-5)",
+        "fb_review_comment": "Comment",
+        "fb_log_review_title": "⭐ Review Received",
+        "fb_field_rating": "Rating",
+        "fb_bug_title": "Bug",
+        "fb_bug_subject": "Title",
+        "fb_bug_desc": "Description",
+        "fb_bug_media": "Image Link",
+        "fb_log_bug_title": "🐛 Bug Received",
+        "fb_field_media": "Proof",
+        
         # --- RDV SYSTEM ---
-        "rdv_setup_title": "🏥 RDV Config", "rdv_panel_title": "📅 Appointments",
-        "rdv_select_ph": "Select type...", "rdv_btn_accept": "Accept", "rdv_btn_refuse": "Refuse",
-        "rdv_ticket_welcome": "👋 Hello {user}!\nStaff ({role}) will handle your **{type}**.\nInfo: {info}",
-        "abs_btn_end": "✅ End Absence", "abs_ended": "✅ **Absence ended.**",
+        "rdv_setup_title": "🏥 Appointment Config",
+        "rdv_setup_desc": "Configure channels and role.\n\n**Current Reasons:**\n{types}",
+        "rdv_ph_public": "Public Channel (Panel Display)",
+        "rdv_ph_staff": "Staff Channel (Receive Requests)",
+        "rdv_ph_transcript": "Logs/Transcript Channel (Staff)",
+        "rdv_ph_role": "Doctor/Staff Role",
+        "rdv_btn_add": "Add Reason",
+        "rdv_btn_del": "Remove Reason",
+        "rdv_modal_type_title": "New Reason",
+        "rdv_modal_type_label": "Name (ex: Consultation)",
+        "rdv_panel_title": "📅 Appointment Booking",
+        "rdv_panel_desc": "Select a reason below to book an appointment.",
+        "rdv_select_ph": "Choose reason...",
+        "rdv_modal_book_title": "Appointment Form",
+        "rdv_modal_book_label": "Availability / Reason",
+        "rdv_new_req_title": "📩 New Request",
+        "rdv_btn_accept": "Accept",
+        "rdv_btn_refuse": "Refuse",
+        "rdv_accepted": "✅ File created: {channel}",
+        "rdv_refused": "❌ Refused by {user}.",
+        "rdv_ticket_welcome": "👋 Hello {user}!\nA {role} will handle your request for **{type}**.\n\n**Info:** {info}",
+        "rdv_btn_close": "Close File",
+        "rdv_err_config": "⚠️ Incomplete configuration.",
+        "rdv_err_perms": "⛔ You do not have the required role to manage this appointment.",
+        
+        # LOGS RDV
+        "rdv_log_closed_title": "🔒 Appointment Closed",
+        "rdv_log_closed_desc": "{patient}'s ticket has been closed.",
+        "rdv_log_accepted_title": "✅ Appointment Accepted",
+        "rdv_log_accepted_desc": "Ticket accepted by {staff} for {patient}.",
+        "rdv_transcript_dm": "📄 Here is the transcript of your appointment ticket.",
 
-        # --- SERVER STATS ---
+        # --- ABSENCE ---
+        "abs_modal_title": "Declare an Absence", 
+        "abs_start_label": "Start", "abs_start_ph": "DD/MM/YYYY",
+        "abs_end_label": "End", "abs_end_ph": "DD/MM/YYYY",
+        "abs_reason_label": "Reason", "abs_reason_ph": "Reason...",
+        "abs_embed_title": "📅 Absence of {user}", 
+        "abs_field_dates": "Dates", "abs_field_duration": "Duration", "abs_field_reason": "Reason", 
+        "abs_error_format": "❌ Invalid Date.", "abs_error_logic": "❌ End < Start.",
+        "abs_user_field": "👤 Agent",
+        "sumall_tag_absence": "🚫 **Absence**",
+        "abs_btn_end": "✅ End Absence",
+        "abs_ended": "✅ Absence ended (Early return).",
+        "abs_err_owner": "⛔ Only the author can end the absence.",
+
+        # --- INFO & ABOUT ---
+        "about_stats_title": "📊 Statistics",
+        "about_tech_title": "🛠️ Technical",
+        "about_val_servers": "**Servers**: `{val}`",
+        "about_val_users": "**Users**: `{val}`",
+        "about_val_version": "**Python**: `{py}` | **D.py**: `{dpy}`",
+        "about_maint_title": "🔄 Automatic Maintenance",
+        "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions are automatically closed.",
+
+        # --- SERVER STATS (Advanced Stats) ---
         "srv_stats_title": "📈 Server Activity Audit",
-        "srv_stats_desc": "Analysis based on **{days}** active days.",
+        "srv_stats_desc": "Analysis over a period of **{days}** active days.",
         "srv_field_global": "🌍 Global Data",
-        "srv_val_total_time": "• Total Time: `{val}`",
+        "srv_val_total_time": "• Cumulative Time: `{val}`",
         "srv_val_sessions": "• Total Sessions: `{val}`",
         "srv_val_total_agents": "• Unique Agents: `{val}`",
         "srv_field_daily": "📅 Daily Averages",
@@ -525,7 +648,7 @@ TRANSLATIONS = {
         "srv_field_weekly": "🗓️ Weekly Averages",
         "srv_val_time_week": "• Avg Time: `{val}/agent/week`",
 
-        # --- SERVER STATS INTERACTIVE ---
+        # --- INTERACTIVE SERVER STATS ---
         "srv_select_placeholder": "Select View (Weekly/Daily)",
         "srv_opt_weekly": "Weekly View (7 days)",
         "srv_opt_daily": "Daily View (24 hours)",
@@ -536,75 +659,107 @@ TRANSLATIONS = {
         "srv_title_weekly_avg": "⏱️ Average Time (7d)",
         
         "srv_title_daily_activity": "📈 Hourly Activity (00h-23h)",
-        "srv_title_daily_avg": "⏱️ Avg Time per Session (00h-23h)",
+        "srv_title_daily_avg": "⏱️ Average Time per Session (00h-23h)",
         "srv_title_daily_starts": "🚀 Shifts Started per Hour",
         "srv_title_daily_sessions": "🔄 Sessions Started (7d)",
-
+        
         "srv_label_hours": "Hours",
         "srv_label_agents": "Agents",
         "srv_label_activity": "Cumulative Presence",
 
-        # --- INFO & ABOUT ---
-        "about_stats_title": "📊 Statistics",
-        "about_tech_title": "🛠️ Tech",
-        "about_val_servers": "**Servers**: `{val}`",
-        "about_val_users": "**Users**: `{val}`",
-        "about_val_version": "**Py**: `{py}` | **D.py**: `{dpy}`",
-        "about_maint_title": "🔄 Auto Maintenance",
-        "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions closed.",
-
-        # --- HELP DETAILED (EN) ---
+        # --- DETAILED HELP EN (Alphabetical Sort) ---
+        "help_title": "📚 Help", "help_desc": "Choose a category.",
+        "help_cat_user": "Users", "help_cat_admin": "Administrator",
+        "help_back": "Back", "help_back_lang": "Languages",
+        "help_user_desc": "Public commands:", "help_admin_desc": "Staff commands:",
+        
         "help_cmds_user": (
             "**• `/about`**\n"
-            "└ Technical info & stats.\n\n"
+            "└ Bot technical information.\n\n"
             "**• `/absence`**\n"
-            "└ Declare an official absence.\n\n"
+            "└ Form to declare an absence.\n\n"
             "**• `/absences_list`**\n"
-            "└ View current active absences.\n\n"
+            "└ See the list of currently absent people.\n\n"
             "**• `/feedback`**\n"
             "└ Send a suggestion or report a bug.\n\n"
             "**• `/help`**\n"
-            "└ Show this help menu.\n\n"
+            "└ Displays this help menu.\n\n"
             "**• `/sum`**\n"
-            "└ Display your personal statistics.\n\n"
+            "└ Displays your personal statistics.\n\n"
             "**• `/sumall`**\n"
-            "└ Display the server leaderboard."
+            "└ Displays the general server leaderboard."
         ),
         
         "help_cmds_admin": (
             "**• `/auto_role`**\n"
             "└ Manually assign configured roles.\n\n"
-            "**• `/cancel [user]`**\n"
+            "**• `/cancel [player]`**\n"
             "└ Cancel a session without saving.\n\n"
-            "**• `/close [user]`**\n"
-            "└ Force close a session (saves time).\n\n"
+            "**• `/close [player]`**\n"
+            "└ Force end an agent's service (save).\n\n"
             "**• `/config_rdv`**\n"
+            "**• `/delrole [player]`**\n"
+            "└ Remove all roles except Citizen.\n\n"
             "└ Configure the appointment system.\n\n"
-            "**• `/details [user]`**\n"
-            "└ Detailed history of last 10 sessions.\n\n"
+            "**• `/details [player]`**\n"
+            "└ Detailed history of last sessions.\n\n"
             "**• `/edittime`**\n"
-            "└ Manually edit time (Add/Remove).\n\n"
-            "**• `/forcestart [user]`**\n"
-            "└ Force start a service session.\n\n"
-            "**• `/pause [user]`**\n"
+            "└ Manually modify time (Add/Remove).\n\n"
+            "**• `/forcestart [player]`**\n"
+            "└ Force start an agent's service.\n\n"
+            "**• `/pause [player]`**\n"
             "└ Force pause an agent.\n\n"
             "**• `/pauselist`**\n"
-            "└ Show agents currently on pause.\n\n"
-            "**• `/presence`**\n"
-            "└ List agents currently on duty.\n\n"
+            "└ Displays the list of paused agents.\n\n"
+            "**• `/presence [channel]`**\n"
+            "└ List of agents on duty.\n\n"
             "**• `/remove_user`**\n"
-            "└ Permanently delete user data.\n\n"
+            "└ Permanently delete an agent's folder.\n\n"
             "**• `/reset_server`**\n"
-            "└ Global data reset (Weekly/Monthly).\n\n"
+            "└ Global reset (Weekly/Monthly).\n\n"
             "**• `/server_stats`**\n"
             "└ Server statistics and graphs.\n\n"
             "**• `/setup`**\n"
             "└ General configuration panel."
         ),
+
+        # --- GENERAL LOGS ---
+        "log_start_title": "🟢 Service Start", "log_start_desc": "Agent {user} started their service.",
+        "log_pause_title": "⏸️ Paused", "log_pause_desc": "Agent {user} went on pause.",
+        "log_resume_title": "▶️ Service Resumed", "log_resume_desc": "Agent {user} resumed their service.",
+        "log_stop_title": "🛑 Service End", "log_stop_desc": "Agent {user} finished their service.",
         
-        # --- ERREURS ---
-        "error_generic": "❌ Error.", "error_perms": "⛔ Denied.", "error_admin_only": "⛔ Admin only.", "error_invalid_input": "❌ Invalid input.",
-        "error_db": "⚠️ DB Error.", "error_no_role": "⚠️ No role.", "role_added": "✅ Role added."
+        "log_force_close_title": "🔧 Forced Close", 
+        "log_force_close_desc": "{user}'s session was closed by {admin}.",
+        
+        "log_edit_time_title": "📈 Time Modified", 
+        "log_edit_time_desc": "Manual modification by {admin}.",
+        
+        "log_reset_title": "⚠️ Total Reset", 
+        "log_reset_desc": "Server reset by {admin}.",
+        
+        "log_cancel_title": "🗑️ Service Cancellation", 
+        "log_cancel_desc": "Session cancelled by {admin} for {user}.",
+        
+        "log_remove_title": "👤 File Deleted", 
+        "log_remove_desc": "{user}'s data deleted by {admin}.",
+        
+        "log_autorole_title": "🏆 Role Assigned", 
+        "log_autorole_desc": "Roles given to {user} by {admin}.",
+        
+        "log_admin_pause_desc": "Forced pause by {admin}.",
+        "log_admin_resume_desc": "Forced resume by {admin}.",
+        
+        "cancel_success": "🗑️ Session cancelled and deleted.",
+
+        "log_maint_title": "🔄 Maintenance", "log_maint_desc": "Auto restart.",
+        "log_bot_stop_title": "🛑 Bot Stop", "log_bot_stop_desc": "Manual stop.",
+        "log_bot_start_title": "🟢 Bot Start", "log_bot_start_desc": "Bot online.",
+        
+        # --- ERRORS ---
+        "error_generic": "❌ System error.", "error_perms": "⛔ Permission denied.", "error_admin_only": "⛔ Admin only.",
+        "error_invalid_input": "❌ Invalid input.", "error_db": "⚠️ DB Error.", "error_no_role": "⚠️ No auto role.",
+        "role_added": "✅ Role {role} added to {user}."
     }
 }
 
