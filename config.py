@@ -5,16 +5,16 @@
 # Informations du bot
 BOT_NAME = "Chronis"
 BOT_COLOR = 0x6100bd  # VIOLET (Couleur principale)
-BOT_VERSION = "2.10.1"
+BOT_VERSION = "3.0.1"
 OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
 # Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
+DEV_FEEDBACK_CHANNEL_ID = ENTER_ID_HERE
 # Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = 1442965292119757037
+DEV_FEEDBACK_ROLE_ID = ENTER_ID_HERE
 # Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = 1441382041831739526
+DEV_LOG_CHANNEL_ID = ENTER_ID_HERE
 
 # --- CONFIGURATION BASE DE DONNEES EXTERNE ---
 DB_HOST = ""       # L'adresse IP (server)
@@ -24,8 +24,9 @@ DB_PASSWORD = "" # Le mot de passe
 DB_NAME = ""        # Le nom de la base
 
 # Liens
-GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
+GITHUB_LINK = ""
 SUPPORT_LINK = "" 
+VOTE_LINK = "" # 
 
 # Configuration des embeds
 EMBED_TITLE = "🔍 Utilisateur(s) en service"
@@ -69,6 +70,7 @@ TRANSLATIONS = {
         "btn_stop": "Fin de service",
         "btn_next": "Page Suivante >>",
         "btn_prev": "<< Page Précédente",
+        "btn_vote": "Voter pour le bot",
 
         # --- PANNEAU SETUP (/setup) ---
         "setup_panel_title": "🛠️ Panneau de Configuration",
@@ -143,17 +145,17 @@ TRANSLATIONS = {
         "et_modal_remove": "Retirer du temps",
         "et_label_hours": "Heures",
         "et_label_minutes": "Minutes",
-        "et_label_seconds": "Secondes",
+        "et_label_seconds": "Seconds",
         "et_placeholder": "0",
 
         # --- ADMIN PAUSE & START ---
         "admin_pause_success": "⏸️ Le service de {user} a été mis en pause par un administrateur.",
         "admin_resume_success": "▶️ Le service de {user} a été relancé par un administrateur.",
-        "admin_start_success": "▶️ Le service de {user} a été démarré de force par un administrateur.", # <-- AJOUT
+        "admin_start_success": "▶️ Le service de {user} a été démarré de force par un administrateur.", 
         "log_admin_pause_title": "⏸️ Pause Forcée",
         "log_admin_resume_title": "▶️ Reprise Forcée",
-        "log_admin_start_title": "▶️ Démarrage Forcé", # <-- AJOUT
-        "log_admin_start_desc": "Service forcé par {admin} pour {user}.", # <-- AJOUT
+        "log_admin_start_title": "▶️ Démarrage Forcé", 
+        "log_admin_start_desc": "Service forcé par {admin} pour {user}.", 
 
         # --- MAINTENANCE ---
         "maint_embed_title": "🚧 MAINTENANCE EN COURS",
@@ -203,7 +205,7 @@ TRANSLATIONS = {
         "log_stat_wip": "En cours...", "log_stat_done": "Terminé",
         "log_footer_done": "Fini le {date}",
         
-        # --- FEEDBACK ---
+        # --- FEEDBACK & VOTE ---
         "feedback_modal_title": "Envoyer un Feedback",
         "feedback_subject": "Sujet",
         "feedback_label": "Message",
@@ -226,13 +228,14 @@ TRANSLATIONS = {
         "fb_bug_media": "Lien image",
         "fb_log_bug_title": "🐛 Bug Reçu",
         "fb_field_media": "Preuve",
+        "vote_msg": "Merci de soutenir le bot ! Cliquez ci-dessous pour voter :",
         
         # --- RDV SYSTEM ---
         "rdv_setup_title": "🏥 Config Rendez-Vous",
-        "rdv_setup_desc": "Configurez les salons et le rôle.\n\n**Motifs actuels :**\n{types}", # <--- MODIFIÉ
+        "rdv_setup_desc": "Configurez les salons et le rôle.\n\n**Motifs actuels :**\n{types}", 
         "rdv_ph_public": "Salon Public (Affichage Panel)",
         "rdv_ph_staff": "Salon Staff (Réception demandes)",
-        "rdv_ph_transcript": "Salon Logs/Transcripts (Staff)", # <--- AJOUTÉ
+        "rdv_ph_transcript": "Salon Logs/Transcripts (Staff)", 
         "rdv_ph_role": "Rôle Médecin/Staff",
         "rdv_btn_add": "Ajouter Motif",
         "rdv_btn_del": "Supprimer Motif",
@@ -252,6 +255,8 @@ TRANSLATIONS = {
         "rdv_btn_close": "Fermer le dossier",
         "rdv_err_config": "⚠️ Configuration incomplète.",
         "rdv_err_perms": "⛔ Vous n'avez pas le rôle requis pour gérer ce RDV.",
+        "rdv_modal_close_title": "Fermeture du Dossier", 
+        "rdv_modal_close_label": "Raison / Conclusion", 
         
         # LOGS RDV
         "rdv_log_closed_title": "🔒 RDV Fermé",
@@ -289,7 +294,7 @@ TRANSLATIONS = {
         "srv_field_global": "🌍 Données Globales",
         "srv_val_total_time": "• Temps Cumulé : `{val}`",
         "srv_val_sessions": "• Sessions Totales : `{val}`",
-        "srv_val_total_agents": "• Agents Uniques : `{val}`", # <--- LIGNE AJOUTÉE
+        "srv_val_total_agents": "• Agents Uniques : `{val}`", 
         "srv_field_daily": "📅 Moyennes Journalières",
         "srv_val_people_day": "• Effectif Moyen : `{val} agents/jour`",
         "srv_val_time_day": "• Temps Moyen : `{val}/agent/jour`",
@@ -315,8 +320,39 @@ TRANSLATIONS = {
         "srv_label_agents": "Agents",
         "srv_label_activity": "Présence Cumulée",
 
+        # --- COMMANDES DYNAMIQUES (Employees, Presence, etc.) ---
+        "emp_title": "👥 Effectif ({count})",
+        "emp_roles_target": "**Rôles ciblés :** {roles}\n\n",
+        "emp_no_config": "⚠️ Aucun rôle 'Auto' n'est configuré dans `/setup`.",
+        "emp_list_empty": "⚠️ La liste des rôles auto est vide.",
+        "emp_roles_not_found": "⚠️ Les rôles configurés n'existent plus sur le serveur.",
+        "emp_no_members": "❌ Aucun membre trouvé avec les rôles : {roles}",
+        
+        "pres_title": "📊 Présence Réaction",
+        "pres_desc": "Analyse du message : {url}",
+        "pres_no_react_msg": "⚠️ Aucun message avec des réactions trouvé dans les 50 derniers messages.",
+        "pres_no_users": "⚠️ Des réactions existent mais aucun utilisateur trouvé.",
+        "pres_footer": "Message du {date}",
+        
+        "abs_list_title": "📅 Absences en cours",
+        "abs_list_empty": "✅ **Aucune absence en cours.**\nTout le monde est disponible.",
+        "abs_reason_title": "📝 **Raison :** {reason}",
+        "abs_footer": "Total : {count} absent(s)",
+        
+        "pause_list_title": "⏸️ En Pause",
+        "pause_list_empty": "Personne n'est en pause.",
+        
+        "msg_truncated": "\n... *(liste tronquée)*",
+        
+        # --- MP FERMETURE TICKET ---
+        "dm_close_title": "🔒 Ticket Fermé",
+        "dm_close_guild": "Serveur",
+        "dm_close_date": "Généré le",
+        "dm_close_staff": "Fermé par",
+        "dm_close_reason": "Raison",
 
-        # --- HELP DÉTAILLÉ FR (Trié Alphabétiquement) ---
+
+        # --- HELP DÉTAILLÉ FR (Divisé en 2 parties pour éviter la limite de 1024 chars) ---
         "help_title": "📚 Aide", "help_desc": "Choisir une catégorie.",
         "help_cat_user": "Utilisateurs", "help_cat_admin": "Administrateur",
         "help_back": "Retour", "help_back_lang": "Langues",
@@ -336,10 +372,12 @@ TRANSLATIONS = {
             "**• `/sum`**\n"
             "└ Affiche vos statistiques personnelles.\n\n"
             "**• `/sumall`**\n"
-            "└ Affiche le classement général du serveur."
+            "└ Affiche le classement général du serveur.\n\n"
+            "**• `/vote`**\n"
+            "└ Lien pour voter pour le bot."
         ),
         
-        "help_cmds_admin": (
+        "help_cmds_admin_1": (
             "**• `/auto_role`**\n"
             "└ Attribuer manuellement les rôles configurés.\n\n"
             "**• `/cancel [joueur]`**\n"
@@ -347,13 +385,18 @@ TRANSLATIONS = {
             "**• `/close [joueur]`**\n"
             "└ Forcer la fin de service d'un agent (sauvegarde).\n\n"
             "**• `/config_rdv`**\n"
+            "└ Configurer le système de rendez-vous.\n\n"
             "**• `/delrole [joueur]`**\n"
             "└ Retirer tous les rôles sauf Citoyen.\n\n"
-            "└ Configurer le système de rendez-vous.\n\n"
             "**• `/details [joueur]`**\n"
             "└ Historique détaillé des dernières sessions.\n\n"
             "**• `/edittime`**\n"
             "└ Modifier manuellement le temps (Ajout/Retrait).\n\n"
+            "**• `/employees`**\n"
+            "└ Liste des membres ayant le rôle auto."
+        ),
+
+        "help_cmds_admin_2": (
             "**• `/forcestart [joueur]`**\n"
             "└ Forcer le début de service d'un agent.\n\n"
             "**• `/pause [joueur]`**\n"
@@ -422,6 +465,7 @@ TRANSLATIONS = {
         "btn_stop": "End Service",
         "btn_next": "Next Page >>",
         "btn_prev": "<< Previous Page",
+        "btn_vote": "Vote for Bot", 
 
         # --- SETUP PANEL (/setup) ---
         "setup_panel_title": "🛠️ Configuration Panel",
@@ -545,7 +589,7 @@ TRANSLATIONS = {
         "delrole_error_config": "❌ Error: **Citizen Role** is not configured in `/setup` (Page 2).",
         "delrole_no_roles": "⚠️ This user had no roles to remove.",
         
-        # --- ADMIN COMMANDS (+) ---
+        # --- ADMIN COMMANDS (+) (Split in 2) ---
         "cmd_sync_start": "⏳ **Syncing in progress...**",
         "cmd_sync_end": "✅ **Sync complete!** ({count} commands)",
         "cmd_restart_start": "👋 **Restarting in progress...**",
@@ -555,7 +599,7 @@ TRANSLATIONS = {
         "log_stat_wip": "In progress...", "log_stat_done": "Done",
         "log_footer_done": "Finished on {date}",
         
-        # --- FEEDBACK ---
+        # --- FEEDBACK & VOTE ---
         "feedback_modal_title": "Send Feedback",
         "feedback_subject": "Subject",
         "feedback_label": "Message",
@@ -578,6 +622,7 @@ TRANSLATIONS = {
         "fb_bug_media": "Image Link",
         "fb_log_bug_title": "🐛 Bug Received",
         "fb_field_media": "Proof",
+        "vote_msg": "Thanks for supporting the bot! Click below to vote:", 
         
         # --- RDV SYSTEM ---
         "rdv_setup_title": "🏥 Appointment Config",
@@ -604,6 +649,8 @@ TRANSLATIONS = {
         "rdv_btn_close": "Close File",
         "rdv_err_config": "⚠️ Incomplete configuration.",
         "rdv_err_perms": "⛔ You do not have the required role to manage this appointment.",
+        "rdv_modal_close_title": "Closing Ticket", 
+        "rdv_modal_close_label": "Reason / Conclusion", 
         
         # LOGS RDV
         "rdv_log_closed_title": "🔒 Appointment Closed",
@@ -667,7 +714,38 @@ TRANSLATIONS = {
         "srv_label_agents": "Agents",
         "srv_label_activity": "Cumulative Presence",
 
-        # --- DETAILED HELP EN (Alphabetical Sort) ---
+        # --- DYNAMIC COMMANDS (Employees, Presence, etc.) ---
+        "emp_title": "👥 Workforce ({count})",
+        "emp_roles_target": "**Targeted Roles:** {roles}\n\n",
+        "emp_no_config": "⚠️ No 'Auto' role configured in `/setup`.",
+        "emp_list_empty": "⚠️ The auto role list is empty.",
+        "emp_roles_not_found": "⚠️ Configured roles no longer exist on the server.",
+        "emp_no_members": "❌ No members found with roles: {roles}",
+        
+        "pres_title": "📊 Reaction Presence",
+        "pres_desc": "Message analysis: {url}",
+        "pres_no_react_msg": "⚠️ No message with reactions found in the last 50 messages.",
+        "pres_no_users": "⚠️ Reactions exist but no users found.",
+        "pres_footer": "Message from {date}",
+        
+        "abs_list_title": "📅 Active Absences",
+        "abs_list_empty": "✅ **No active absences.**\nEveryone is available.",
+        "abs_reason_title": "📝 **Reason:** {reason}",
+        "abs_footer": "Total: {count} absent(s)",
+        
+        "pause_list_title": "⏸️ On Break",
+        "pause_list_empty": "No one is on break.",
+        
+        "msg_truncated": "\n... *(list truncated)*",
+        
+        # --- TICKET CLOSE DM ---
+        "dm_close_title": "🔒 Ticket Closed",
+        "dm_close_guild": "Server",
+        "dm_close_date": "Generated on",
+        "dm_close_staff": "Closed by",
+        "dm_close_reason": "Reason",
+
+        # --- DETAILED HELP EN ---
         "help_title": "📚 Help", "help_desc": "Choose a category.",
         "help_cat_user": "Users", "help_cat_admin": "Administrator",
         "help_back": "Back", "help_back_lang": "Languages",
@@ -687,10 +765,12 @@ TRANSLATIONS = {
             "**• `/sum`**\n"
             "└ Displays your personal statistics.\n\n"
             "**• `/sumall`**\n"
-            "└ Displays the general server leaderboard."
+            "└ Displays the general server leaderboard.\n\n"
+            "**• `/vote`**\n"
+            "└ Link to vote for the bot."
         ),
         
-        "help_cmds_admin": (
+        "help_cmds_admin_1": (
             "**• `/auto_role`**\n"
             "└ Manually assign configured roles.\n\n"
             "**• `/cancel [player]`**\n"
@@ -698,13 +778,18 @@ TRANSLATIONS = {
             "**• `/close [player]`**\n"
             "└ Force end an agent's service (save).\n\n"
             "**• `/config_rdv`**\n"
+            "└ Configure the appointment system.\n\n"
             "**• `/delrole [player]`**\n"
             "└ Remove all roles except Citizen.\n\n"
-            "└ Configure the appointment system.\n\n"
             "**• `/details [player]`**\n"
             "└ Detailed history of last sessions.\n\n"
             "**• `/edittime`**\n"
             "└ Manually modify time (Add/Remove).\n\n"
+            "**• `/employees`**\n"
+            "└ List members with the auto role."
+        ),
+
+        "help_cmds_admin_2": (
             "**• `/forcestart [player]`**\n"
             "└ Force start an agent's service.\n\n"
             "**• `/pause [player]`**\n"

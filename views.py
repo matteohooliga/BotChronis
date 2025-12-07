@@ -36,7 +36,7 @@ async def send_feedback_log(bot, interaction, title, color, fields):
     return False
 
 # --- FONCTION TRANSCRIPT (TXT SIMPLE) ---
-async def generate_transcript_file(channel: discord.TextChannel):
+async def generate_transcript_file(channel: discord.TextChannel, closer: discord.User = None, reason: str = None):
     """Génère un fichier TXT simple contenant l'historique du salon."""
     messages = [m async for m in channel.history(limit=None, oldest_first=True)]
     
@@ -44,6 +44,12 @@ async def generate_transcript_file(channel: discord.TextChannel):
     lines.append("---- LOG DE TICKET ----")
     lines.append(f"Salon : {channel.name}")
     lines.append(f"Généré le : {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    
+    if closer:
+        lines.append(f"Fermé par : {closer.display_name} ({closer.id})")
+    if reason:
+        lines.append(f"Raison de fermeture : {reason}")
+        
     lines.append("-" * 30)
     lines.append("") 
     
@@ -202,7 +208,6 @@ class AbsenceModal(discord.ui.Modal):
                 str(msg.id)
             )
             
-            # MODIFIE: Utilisation de la nouvelle vue sans ID utilisateur
             view = AbsenceView(self.bot, self.lang)
             await msg.edit(view=view)
             try: await msg.add_reaction("✅")
@@ -362,6 +367,105 @@ class RdvBookingModal(discord.ui.Modal):
         await channel.send(content=content_role, embed=embed, view=view)
         await interaction.response.send_message("✅ Demande envoyée !", ephemeral=True)
 
+# --- NOUVEAU MODAL DE FERMETURE RDV (TRADUIT) ---
+class RdvCloseModal(discord.ui.Modal):
+    def __init__(self, bot, interaction):
+        self.bot = bot
+        self.prev_interaction = interaction
+        
+        conf = bot.db._config_cache.get(str(interaction.guild.id)) 
+        lang = conf['language'] if conf else 'fr'
+        txt = config.TRANSLATIONS[lang]
+        
+        super().__init__(title=txt.get('rdv_modal_close_title', "Fermeture du Dossier"))
+        self.reason = discord.ui.TextInput(label=txt.get('rdv_modal_close_label', "Raison / Conclusion"), style=discord.TextStyle.paragraph, required=True)
+        self.add_item(self.reason)
+        self.lang = lang
+
+    async def on_submit(self, interaction: discord.Interaction):
+        txt = config.TRANSLATIONS[self.lang]
+        await interaction.response.send_message("Génération du transcript et fermeture...", ephemeral=True)
+        
+        topic = interaction.channel.topic or ""
+        patient_id = None
+        staff_id = None
+        request_ts = None
+        staff_msg_id = None
+        
+        # --- PARSING DU TOPIC ---
+        if "Patient:" in topic:
+            try:
+                parts = topic.split("|")
+                for p in parts:
+                    if "Patient:" in p: patient_id = int(p.split(":")[1].strip())
+                    if "Staff:" in p: staff_id = int(p.split(":")[1].strip())
+                    if "Date:" in p: request_ts = int(p.split(":")[1].strip())
+                    if "Msg:" in p: staff_msg_id = int(p.split(":")[1].strip())
+            except: pass
+        # ------------------------
+
+        transcript_file = await generate_transcript_file(interaction.channel, interaction.user, self.reason.value)
+        
+        # --- ENVOI MP PATIENT (TRADUIT) ---
+        if patient_id:
+            try:
+                patient = await self.bot.fetch_user(patient_id)
+                
+                embed_dm_close = discord.Embed(title=txt['dm_close_title'], color=discord.Color.red())
+                embed_dm_close.add_field(name=txt['dm_close_guild'], value=interaction.channel.name, inline=False)
+                embed_dm_close.add_field(name=txt['dm_close_date'], value=datetime.now().strftime('%d/%m/%Y %H:%M'), inline=False)
+                embed_dm_close.add_field(name=txt['dm_close_staff'], value=f"{interaction.user.display_name} ({interaction.user.id})", inline=False)
+                embed_dm_close.add_field(name=txt['dm_close_reason'], value=self.reason.value, inline=False)
+                embed_dm_close.set_footer(text=config.EMBED_FOOTER)
+                
+                transcript_file.fp.seek(0)
+                await patient.send(embed=embed_dm_close, file=transcript_file)
+                transcript_file.fp.seek(0) 
+            except: pass
+        # -------------------------
+            
+        conf = await self.bot.db.get_rdv_config(interaction.guild.id)
+        
+        # --- MISE A JOUR MESSAGE STAFF ("Effectué") ---
+        if staff_msg_id and conf.get('staff'):
+            try:
+                chan_staff = interaction.guild.get_channel(int(conf['staff']))
+                if chan_staff:
+                    msg = await chan_staff.fetch_message(staff_msg_id)
+                    new_embed = msg.embeds[0]
+                    new_embed.color = discord.Color.greyple()
+                    new_embed.set_footer(text=f"Terminé le {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+                    await msg.edit(content=f"✅ **Rendez-vous Effectué** (Traité par {interaction.user.mention})", embed=new_embed, view=None)
+            except Exception as e: print(f"Erreur update msg staff: {e}")
+        # ----------------------------------------------
+
+        # --- LOGS TRANSCRIPT ---
+        if conf and conf.get('transcript'):
+            try:
+                log_chan = interaction.guild.get_channel(int(conf['transcript']))
+                if log_chan:
+                    embed_log = discord.Embed(title=txt.get('rdv_log_closed_title', "RDV Fermé"), color=discord.Color.red())
+                    pat_men = f"<@{patient_id}>" if patient_id else "Inconnu"
+                    stf_men = f"<@{staff_id}>" if staff_id else "Inconnu"
+                    
+                    embed_log.description = txt.get('rdv_log_closed_desc', "Fermé").format(patient=pat_men)
+                    embed_log.add_field(name="Ouvert par (Staff)", value=stf_men, inline=True)
+                    embed_log.add_field(name="Fermé par", value=interaction.user.mention, inline=True)
+                    
+                    if request_ts:
+                        embed_log.add_field(name="📅 Créé le", value=f"<t:{request_ts}:f>", inline=False)
+                    
+                    # AJOUT DE LA RAISON
+                    embed_log.add_field(name="📝 Raison / Conclusion", value=self.reason.value, inline=False)
+                    
+                    embed_log.timestamp = datetime.now()
+                    transcript_file.fp.seek(0)
+                    await log_chan.send(embed=embed_log, file=transcript_file)
+            except Exception as e: print(f"Log error: {e}")
+        # -----------------------
+
+        await discord.utils.sleep_until(discord.utils.utcnow() + timedelta(seconds=2))
+        await interaction.channel.delete()
 
 # ==============================================================================
 #                            VUES INTERACTIVES
@@ -374,20 +478,17 @@ class AbsenceView(discord.ui.View):
         self.lang = lang
         txt = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
         
-        # ID STATIC : "absence_end_btn"
         btn = discord.ui.Button(label=txt.get('abs_btn_end', "Fin"), style=discord.ButtonStyle.success, custom_id="absence_end_btn")
         btn.callback = self.end_absence
         self.add_item(btn)
 
     async def end_absence(self, interaction: discord.Interaction):
-        # On récupère la langue du serveur
         conf_guild = await self.bot.db.get_guild_config(str(interaction.guild_id))
         lang = conf_guild.get('language', 'fr') if conf_guild else 'fr'
         txt = config.TRANSLATIONS.get(lang, config.TRANSLATIONS['fr'])
         
         msg_id = str(interaction.message.id)
         
-        # 1. On cherche l'absence dans la DB via l'ID du message
         absence_data = await self.bot.db.get_absence_by_message_id(msg_id)
         
         if not absence_data:
@@ -395,11 +496,9 @@ class AbsenceView(discord.ui.View):
 
         owner_id = absence_data['user_id']
 
-        # 2. Vérification Permission (Propriétaire ou Admin)
         if str(interaction.user.id) != str(owner_id) and not interaction.user.guild_permissions.administrator:
             return await interaction.response.send_message(txt.get('abs_err_owner', "Pas toi !"), ephemeral=True)
             
-        # 3. Suppression
         await self.bot.db.end_absence(msg_id)
         
         embed = interaction.message.embeds[0]
@@ -425,6 +524,7 @@ class RdvSetupView(discord.ui.View):
     def update_components(self):
         self.clear_items()
         txt = config.TRANSLATIONS[self.lang]
+        # --- RETRAIT DE DEFAULT_VALUES (COMPATIBILITE) ---
         self.add_item(discord.ui.ChannelSelect(placeholder=txt.get('rdv_ph_public', "Salon Public"), custom_id="rdv_pub", channel_types=[discord.ChannelType.text]))
         self.add_item(discord.ui.ChannelSelect(placeholder=txt.get('rdv_ph_staff', "Salon Staff"), custom_id="rdv_stf", channel_types=[discord.ChannelType.text]))
         self.add_item(discord.ui.ChannelSelect(placeholder=txt.get('rdv_ph_transcript', "Salon Logs/Transcript"), custom_id="rdv_trs", channel_types=[discord.ChannelType.text])) 
@@ -457,7 +557,9 @@ class RdvSetupView(discord.ui.View):
         elif cid == "rdv_stf": self.staff_id = vals[0]
         elif cid == "rdv_trs": self.transcript_id = vals[0]
         elif cid == "rdv_rol": self.role_id = vals[0]
-        if cid in ["rdv_pub", "rdv_stf", "rdv_trs", "rdv_rol"]: await interaction.response.defer(); return False
+        if cid in ["rdv_pub", "rdv_stf", "rdv_trs", "rdv_rol"]: 
+             await interaction.response.defer()
+             return False
         return True
 
     async def add_type(self, interaction: discord.Interaction):
@@ -593,6 +695,11 @@ class RdvStaffView(discord.ui.View):
         except: 
             return await interaction.response.send_message("⚠️ Utilisateur introuvable (a peut-être quitté le serveur).", ephemeral=True)
         
+        request_time = interaction.message.created_at
+        request_ts = int(request_time.timestamp())
+        
+        staff_msg_id = interaction.message.id
+
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             user: discord.PermissionOverwrite(read_messages=True),
@@ -613,7 +720,8 @@ class RdvStaffView(discord.ui.View):
         
         chan_name = f"rdv-{user.name}-{rdv_type}"
         chan_name = chan_name.replace(" ", "-").lower()[:99]
-        topic_info = f"Patient: {user.id} | Staff: {interaction.user.id} | Type: {rdv_type}"
+        
+        topic_info = f"Patient: {user.id} | Staff: {interaction.user.id} | Type: {rdv_type} | Date: {request_ts} | Msg: {staff_msg_id}"
         
         channel = await guild.create_text_channel(chan_name, category=cat, overwrites=overwrites, topic=topic_info)
         
@@ -622,13 +730,23 @@ class RdvStaffView(discord.ui.View):
         
         await interaction.message.edit(view=None, content=txt.get('rdv_accepted', "Accepté").format(staff=interaction.user.mention, channel=channel.mention), embed=interaction.message.embeds[0])
 
+        # --- ENVOI MP ACCEPTATION (Lien Direct) ---
+        try:
+            embed_dm_acc = discord.Embed(title="✅ Demande de RDV Acceptée", color=discord.Color.green())
+            embed_dm_acc.description = f"Votre demande a été acceptée par {interaction.user.mention}.\n\n🔗 **Accéder au salon :** [Cliquez ici]({channel.jump_url})"
+            embed_dm_acc.set_footer(text=config.EMBED_FOOTER)
+            await user.send(embed=embed_dm_acc)
+        except: pass
+        # ------------------------------------------
+
         if conf.get('transcript'):
             try:
                 log_chan = guild.get_channel(int(conf['transcript']))
                 if log_chan:
                     embed_log = discord.Embed(title=txt.get('rdv_log_accepted_title', "RDV Accepté"), color=discord.Color.green())
                     embed_log.description = txt.get('rdv_log_accepted_desc', "Accepté par {staff}").format(staff=interaction.user.mention, patient=user.mention)
-                    embed_log.add_field(name="Type", value=rdv_type)
+                    embed_log.add_field(name="Type", value=rdv_type, inline=True)
+                    embed_log.add_field(name="📅 Demandé le", value=f"<t:{request_ts}:f>", inline=True)
                     embed_log.timestamp = datetime.now()
                     await log_chan.send(embed=embed_log)
             except: pass
@@ -649,45 +767,7 @@ class RdvTicketView(discord.ui.View):
         self.add_item(btn)
 
     async def close(self, interaction: discord.Interaction):
-        txt = config.TRANSLATIONS[self.lang]
-        await interaction.response.send_message("Génération du transcript et fermeture...", ephemeral=True)
-        topic = interaction.channel.topic or ""
-        patient_id = None
-        staff_id = None
-        if "Patient:" in topic:
-            try:
-                parts = topic.split("|")
-                for p in parts:
-                    if "Patient:" in p: patient_id = int(p.split(":")[1].strip())
-                    if "Staff:" in p: staff_id = int(p.split(":")[1].strip())
-            except: pass
-
-        transcript_file = await generate_transcript_file(interaction.channel)
-        if patient_id:
-            try:
-                patient = await self.bot.fetch_user(patient_id)
-                await patient.send(content=txt.get('rdv_transcript_dm', "Votre transcript :"), file=transcript_file)
-                transcript_file.fp.seek(0) 
-            except: pass
-            
-        conf = await self.bot.db.get_rdv_config(interaction.guild.id)
-        if conf and conf.get('transcript'):
-            try:
-                log_chan = interaction.guild.get_channel(int(conf['transcript']))
-                if log_chan:
-                    embed_log = discord.Embed(title=txt.get('rdv_log_closed_title', "RDV Fermé"), color=discord.Color.red())
-                    pat_men = f"<@{patient_id}>" if patient_id else "Inconnu"
-                    stf_men = f"<@{staff_id}>" if staff_id else "Inconnu"
-                    embed_log.description = txt.get('rdv_log_closed_desc', "Fermé").format(patient=pat_men)
-                    embed_log.add_field(name="Ouvert par (Staff)", value=stf_men, inline=True)
-                    embed_log.add_field(name="Fermé par", value=interaction.user.mention, inline=True)
-                    embed_log.timestamp = datetime.now()
-                    transcript_file.fp.seek(0)
-                    await log_chan.send(embed=embed_log, file=transcript_file)
-            except Exception as e: print(f"Log error: {e}")
-
-        await discord.utils.sleep_until(discord.utils.utcnow() + timedelta(seconds=2))
-        await interaction.channel.delete()
+        await interaction.response.send_modal(RdvCloseModal(self.bot, interaction))
 
 class ServerStatsView(discord.ui.View):
     def __init__(self, bot, guild_id, sessions, stats, lang):
@@ -886,7 +966,7 @@ class ServiceButtonsView(discord.ui.View):
             await self.db.start_session(str(interaction.user.id), str(interaction.guild_id), interaction.user.display_name)
             await interaction.followup.send(texts['service_started'], ephemeral=True)
             await self.bot.send_log(interaction.guild.id, texts['log_start_title'], texts['log_start_desc'].format(user=interaction.user.mention), config.COLOR_GREEN)
-            await self.bot.update_service_message(interaction.guild_id)
+            await self.bot.update_service_message(interaction.guild_id, None, None)
         except: await interaction.followup.send(texts['error_db'], ephemeral=True)
 
     @discord.ui.button(style=discord.ButtonStyle.primary, custom_id=config.BUTTONS['pause']['custom_id'])
@@ -908,7 +988,7 @@ class ServiceButtonsView(discord.ui.View):
                 await self.db.pause_session(str(interaction.user.id), str(interaction.guild_id))
                 await interaction.followup.send(texts['service_paused'], ephemeral=True)
                 await self.bot.send_log(interaction.guild.id, texts['log_pause_title'], texts['log_pause_desc'].format(user=interaction.user.mention), config.COLOR_ORANGE)
-            await self.bot.update_service_message(interaction.guild_id)
+            await self.bot.update_service_message(interaction.guild_id, None, None)
         except: await interaction.followup.send(texts['error_db'], ephemeral=True)
 
     @discord.ui.button(style=discord.ButtonStyle.danger, custom_id=config.BUTTONS['stop']['custom_id'])
@@ -927,7 +1007,7 @@ class ServiceButtonsView(discord.ui.View):
                 msg = texts['service_stopped'].format(duration=format_duration(tot), pause=format_duration(end['pause_duration']), effective=format_duration(end['total_duration']))
                 await interaction.followup.send(msg, ephemeral=True)
                 await self.bot.send_log(interaction.guild.id, texts['log_stop_title'], texts['log_stop_desc'].format(user=interaction.user.mention), config.COLOR_RED, [("Total", format_duration(tot))])
-                await self.bot.update_service_message(interaction.guild_id)
+                await self.bot.update_service_message(interaction.guild_id, None, None)
             else: await interaction.followup.send(texts['error_db'], ephemeral=True)
         except: await interaction.followup.send(texts['error_db'], ephemeral=True)
 
@@ -952,14 +1032,21 @@ class HelpView(discord.ui.View):
         t = config.TRANSLATIONS.get(self.lang, config.TRANSLATIONS['fr'])
         if cat == 'root':
             return discord.Embed(title=t['help_title'], description=t['help_desc'], color=config.BOT_COLOR)
+        
         if cat == 'user': 
             embed = discord.Embed(title=f"{t['help_title']} - Users", description=t['help_user_desc'], color=config.BOT_COLOR)
             embed.add_field(name="Liste", value=t['help_cmds_user'], inline=False)
             return embed
+            
         elif cat == 'admin': 
             embed = discord.Embed(title=f"{t['help_title']} - Admin", description=t['help_admin_desc'], color=config.BOT_COLOR)
-            embed.add_field(name="Liste", value=t['help_cmds_admin'], inline=False)
+            if 'help_cmds_admin_1' in t:
+                embed.add_field(name="Gestion (1/2)", value=t['help_cmds_admin_1'], inline=False)
+                embed.add_field(name="Gestion (2/2)", value=t['help_cmds_admin_2'], inline=False)
+            else:
+                embed.add_field(name="Liste", value=t['help_cmds_admin'], inline=False)
             return embed
+            
         return discord.Embed(title=t['help_title'], description=t['help_desc'], color=config.BOT_COLOR)
         
     def update_buttons(self, state):
@@ -991,37 +1078,6 @@ class HelpView(discord.ui.View):
     async def cb_admin(self, i): self.update_buttons('sub'); await i.response.edit_message(embed=self.get_embed('admin'), view=self)
     async def cb_feed(self, i): await i.response.send_message(view=FeedbackView(self.bot, self.lang), ephemeral=True)
 
-class AboutView(discord.ui.View):
-    def __init__(self, bot, lang):
-        super().__init__(timeout=None)
-        self.bot=bot; self.lang=lang
-        t=config.TRANSLATIONS[lang]
-        p=discord.Permissions(administrator=True)
-        inv=discord.utils.oauth_url(bot.user.id, permissions=p)
-        self.add_item(discord.ui.Button(label=t['btn_invite'], url=inv, style=discord.ButtonStyle.link))
-        self.add_item(discord.ui.Button(label=t['btn_source'], url=config.GITHUB_LINK, style=discord.ButtonStyle.url))
-        self.add_item(discord.ui.Button(label=t['btn_refresh'], style=discord.ButtonStyle.secondary, emoji="🔄"))
-        self.children[2].callback = self.refresh
-        
-    def get_embed(self):
-        t = config.TRANSLATIONS.get(self.lang, config.TRANSLATIONS['fr'])
-        e = discord.Embed(title=f"ℹ️ {config.BOT_NAME}", description="Service Bot", color=config.BOT_COLOR)
-        e.add_field(name="Version", value=f"`{config.BOT_VERSION}`", inline=True)
-        e.add_field(name="Dev", value=f"matteohooliga\n`({config.OWNER_ID})`", inline=True)
-        e.add_field(name=t['about_maint_title'], value=t['about_maint_desc'], inline=False)
-        server_count = len(self.bot.guilds)
-        user_count = sum(g.member_count for g in self.bot.guilds)
-        e.add_field(name=t['about_stats_title'], value=f"{t['about_val_servers'].format(val=server_count)}\n{t['about_val_users'].format(val=user_count)}", inline=False)
-        py_ver = sys.version.split()[0]
-        dpy_ver = discord.__version__
-        e.add_field(name=t['about_tech_title'], value=t['about_val_version'].format(py=py_ver, dpy=dpy_ver), inline=False)
-        e.add_field(name="Ping", value=f"`{round(self.bot.latency*1000)}ms`", inline=True)
-        e.set_footer(text=config.EMBED_FOOTER)
-        e.timestamp = datetime.now()
-        return e
-    
-    async def refresh(self, i): e=self.get_embed(); await i.response.edit_message(embed=e, view=self)
-
 class FeedbackTypeSelect(discord.ui.Select):
     def __init__(self, bot, lang):
         self.bot=bot; self.lang=lang
@@ -1037,19 +1093,88 @@ class FeedbackView(discord.ui.View):
     def __init__(self, bot, lang): super().__init__(timeout=60); self.add_item(FeedbackTypeSelect(bot, lang))
 
 # ==============================================================================
-#                 SETUP VIEW (PAGINÉE) - CORRIGÉE
+#                 NOUVELLE VUE : AboutView (TRADUCTION AUTO & BOUTONS)
+# ==============================================================================
+class AboutView(discord.ui.View):
+    def __init__(self, bot, lang):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.lang = lang
+        
+        # --- RÉCUPÉRATION DES LIENS DEPUIS CONFIG.PY ---
+        # Si la variable n'existe pas dans config, on met un lien par défaut
+        vote_url = getattr(config, 'VOTE_LINK', "https://top.gg/")
+        github_url = getattr(config, 'GITHUB_LINK', "https://github.com/")
+        
+        # --- AJOUT DES BOUTONS ---
+        # Bouton Vote
+        self.add_item(discord.ui.Button(label="Voter" if lang == 'fr' else "Vote", style=discord.ButtonStyle.link, url=vote_url, emoji="🗳️"))
+        
+        # Bouton GitHub
+        self.add_item(discord.ui.Button(label="GitHub", style=discord.ButtonStyle.link, url=github_url, emoji="🐙"))
+        
+    def get_embed(self):
+        # Récupération de la traduction depuis config (si elle existe)
+        txt = config.TRANSLATIONS.get(self.lang, config.TRANSLATIONS['fr'])
+        
+        # Données techniques
+        ping = round(self.bot.latency * 1000)
+        guilds = len(self.bot.guilds)
+        python_v = sys.version.split()[0]
+        discord_v = discord.__version__
+        
+        # Récupération de la version du bot depuis config.py
+        bot_version = getattr(config, 'BOT_VERSION', 'Inconnue')
+        
+        # --- LOGIQUE DE TRADUCTION PAR DÉFAUT (Hardcodée pour sécurité) ---
+        if self.lang == 'en':
+            # Textes par défaut en Anglais
+            def_title = "ℹ️ System Info"
+            def_desc = "Service management bot, time tracking and statistics."
+            lbl_ping = "🏓 Latency"
+            lbl_guilds = "🌍 Servers"
+            lbl_version = "⚙️ Version"
+        else:
+            # Textes par défaut en Français
+            def_title = "ℹ️ Informations Système"
+            def_desc = "Bot de gestion de service, pointage et statistiques."
+            lbl_ping = "🏓 Latence"
+            lbl_guilds = "🌍 Serveurs"
+            lbl_version = "⚙️ Version"
+
+        # On essaie de prendre la clé config, sinon on prend notre défaut défini ci-dessus
+        title = txt.get('about_title', def_title)
+        desc = txt.get('about_description', def_desc)
+
+        embed = discord.Embed(title=title, description=desc, color=config.BOT_COLOR)
+        
+        # Champs d'informations (Traductions dynamiques)
+        # On utilise txt.get si jamais vous avez défini 'about_field_latency' dans votre config, sinon on utilise lbl_ping
+        embed.add_field(name=txt.get('about_field_latency', lbl_ping), value=f"`{ping}ms`", inline=True)
+        embed.add_field(name=txt.get('about_field_servers', lbl_guilds), value=f"`{guilds}`", inline=True)
+        embed.add_field(name=txt.get('about_field_version', lbl_version), value=f"`{bot_version}`", inline=True)
+        
+        embed.add_field(name="🐍 Python", value=f"`{python_v}`", inline=True)
+        embed.add_field(name="📚 Discord.py", value=f"`{discord_v}`", inline=True)
+        
+        # Footer
+        embed.set_footer(text=config.EMBED_FOOTER)
+        return embed
+
+# ==============================================================================
+#                 SETUP VIEW (PAGINÉE) - CORRIGÉE (AVEC get_desc)
 # ==============================================================================
 
 class SetupView(discord.ui.View):
     def __init__(self, bot, config_data=None):
         super().__init__(timeout=300)
         self.bot = bot
-        self.page = 1 # Gestion des pages
+        self.page = 1 
         self.sel_lang = config_data.get('language','fr') if config_data else 'fr'
         self.sel_service = config_data.get('channel_id') if config_data else None
         self.sel_logs = config_data.get('log_channel_id') if config_data else None
-        self.sel_role = json.loads(config_data.get('direction_role_id','[]')) if config_data else []
-        self.sel_autorole = json.loads(config_data.get('auto_roles_list','[]')) if config_data else []
+        self.sel_role = json.loads(config_data.get('direction_role_id') or '[]') if config_data else []
+        self.sel_autorole = json.loads(config_data.get('auto_roles_list') or '[]') if config_data else []
         self.sel_citizen = config_data.get('citizen_role_id') if config_data else None
         self.sel_goal = config_data.get('min_hours_goal',0) if config_data else 0
         self.update_components()
@@ -1060,32 +1185,27 @@ class SetupView(discord.ui.View):
         
         # --- PAGE 1 : GENERAL ---
         if self.page == 1:
-            # Choix Langue
             b1 = discord.ui.Button(label="FR", custom_id="fr", style=discord.ButtonStyle.primary if self.sel_lang=='fr' else discord.ButtonStyle.secondary); b1.callback=self.cb_fr; self.add_item(b1)
             b2 = discord.ui.Button(label="EN", custom_id="en", style=discord.ButtonStyle.primary if self.sel_lang=='en' else discord.ButtonStyle.secondary); b2.callback=self.cb_en; self.add_item(b2)
             
-            # Selects Channels
-            self.add_item(discord.ui.ChannelSelect(placeholder=t['setup_ph_service'], channel_types=[discord.ChannelType.text], min_values=1, max_values=1, custom_id="svc"))
-            self.add_item(discord.ui.ChannelSelect(placeholder=t['setup_ph_logs'], channel_types=[discord.ChannelType.text], min_values=0, max_values=1, custom_id="log"))
+            # Plus de {val} dans les placeholders, juste l'action
+            self.add_item(discord.ui.ChannelSelect(placeholder="📢 Définir Salon Service", channel_types=[discord.ChannelType.text], min_values=1, max_values=1, custom_id="svc"))
+            self.add_item(discord.ui.ChannelSelect(placeholder="📜 Définir Salon Logs", channel_types=[discord.ChannelType.text], min_values=0, max_values=1, custom_id="log"))
             
-            # Navigation
             btn_next = discord.ui.Button(label=t['setup_btn_next'], custom_id="next", style=discord.ButtonStyle.primary, row=4)
             btn_next.callback = self.cb_next
             self.add_item(btn_next)
 
         # --- PAGE 2 : ROLES ---
         elif self.page == 2:
-            # Selects Rôles
-            self.add_item(discord.ui.RoleSelect(placeholder=t['setup_ph_role'], min_values=0, max_values=20, custom_id="role"))
-            self.add_item(discord.ui.RoleSelect(placeholder=t['setup_ph_autorole'], min_values=0, max_values=20, custom_id="autorole"))
-            self.add_item(discord.ui.RoleSelect(placeholder=t['setup_ph_citizen'], min_values=0, max_values=1, custom_id="citizen"))
+            self.add_item(discord.ui.RoleSelect(placeholder="👔 Définir Rôle Direction", min_values=0, max_values=20, custom_id="role"))
+            self.add_item(discord.ui.RoleSelect(placeholder="🏆 Définir Rôle Auto", min_values=0, max_values=20, custom_id="autorole"))
+            self.add_item(discord.ui.RoleSelect(placeholder="👤 Définir Rôle Citoyen", min_values=0, max_values=1, custom_id="citizen"))
 
-            # Navigation
             btn_back = discord.ui.Button(label=t['setup_btn_back'], custom_id="back", style=discord.ButtonStyle.secondary, row=4)
             btn_back.callback = self.cb_back
             self.add_item(btn_back)
             
-            # Validation finale
             btn_save = discord.ui.Button(label=t['setup_btn_save'], custom_id="save", style=discord.ButtonStyle.success, row=4)
             btn_save.callback = self.cb_save
             self.add_item(btn_save)
@@ -1093,27 +1213,54 @@ class SetupView(discord.ui.View):
     async def refresh(self, i):
         t = config.TRANSLATIONS[self.sel_lang]
         title = f"{t['setup_panel_title']} - Page {self.page}/2"
+        # On utilise une description vide par défaut si la clé n'existe pas
         desc_key = f"setup_panel_desc_{self.page}"
-        desc = t.get(desc_key, t['setup_panel_desc']) + "\n\n" + self.get_desc(t)
+        base_desc = t.get(desc_key, t.get('setup_panel_desc', "Configuration"))
         
-        e = discord.Embed(title=title, description=desc, color=config.BOT_COLOR)
+        # CONSTRUCTION DU RESUME (C'est ici qu'on affiche les valeurs actuelles)
+        summary = self.get_summary_string()
+        
+        full_desc = f"{base_desc}\n\n{summary}"
+        
+        e = discord.Embed(title=title, description=full_desc, color=config.BOT_COLOR)
         e.set_footer(text=config.EMBED_FOOTER)
         
-        # --- CORRECTION ICI ---
-        # Si l'interaction a déjà eu une réponse (ou un defer), on utilise edit_original_response
         if i.response.is_done():
             await i.edit_original_response(embed=e, view=self)
         else:
             await i.response.edit_message(embed=e, view=self)
+            
+    # --- METHODE AJOUTEE POUR CORRIGER L'ERREUR ---
+    def get_desc(self, txt):
+        """Retourne la description de l'état actuel pour la commande setup."""
+        return self.get_summary_string()
+    # ----------------------------------------------
         
-    def get_desc(self, t):
-        # Résumé visuel en bas de l'embed
-        svc = f"<#{self.sel_service}>" if self.sel_service else "❌"
-        log = f"<#{self.sel_logs}>" if self.sel_logs else "❌"
-        rol = f"{len(self.sel_role)} rôles" if self.sel_role else "❌"
-        aut = f"{len(self.sel_autorole)} rôles" if self.sel_autorole else "❌"
-        cit = f"<@&{self.sel_citizen}>" if self.sel_citizen else "❌"
-        return f"**Config Actuelle :**\nLanguage: `{self.sel_lang}`\nService: {svc}\nLogs: {log}\nDirection: {rol}\nAuto-Role: {aut}\nCitoyen: {cit}"
+    def get_summary_string(self):
+        # Fonction dédiée pour construire l'affichage propre
+        svc = f"<#{self.sel_service}>" if self.sel_service else "❌ *Non défini*"
+        log = f"<#{self.sel_logs}>" if self.sel_logs else "❌ *Non défini*"
+        
+        # Pour les rôles, on affiche le nombre ou 'Non défini'
+        rol_count = len(self.sel_role)
+        rol_str = f"✅ {rol_count} rôle(s)" if rol_count > 0 else "❌ *Non défini*"
+        
+        aut_count = len(self.sel_autorole)
+        aut_str = f"✅ {aut_count} rôle(s)" if aut_count > 0 else "❌ *Non défini*"
+        
+        cit = f"<@&{self.sel_citizen}>" if self.sel_citizen else "❌ *Non défini*"
+        
+        flag = "🇫🇷" if self.sel_lang == 'fr' else "🇬🇧"
+        
+        return (
+            f"**📊 CONFIGURATION ACTUELLE**\n"
+            f"> **Langue :** {flag} `{self.sel_lang.upper()}`\n"
+            f"> **Salon Service :** {svc}\n"
+            f"> **Salon Logs :** {log}\n"
+            f"> **Rôle Direction :** {rol_str}\n"
+            f"> **Rôle Auto :** {aut_str}\n"
+            f"> **Rôle Citoyen :** {cit}"
+        )
         
     async def cb_fr(self, i): self.sel_lang='fr'; self.update_components(); await self.refresh(i)
     async def cb_en(self, i): self.sel_lang='en'; self.update_components(); await self.refresh(i)
