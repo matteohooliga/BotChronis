@@ -1,0 +1,30 @@
+[
+  {
+    "questions": ["comment configurer le bot", "comment utiliser la commande setup", "how to configure setup"],
+    "answers": {"fr": "Un administrateur peut lancer `/setup` sur son serveur pour choisir les salons, les rôles et les options de service.", "en": "An administrator can run `/setup` in the server to configure channels, roles and service options."}
+  },
+  {
+    "questions": ["comment démarrer un service", "comment prendre son service", "how to start service"],
+    "answers": {"fr": "Utilisez le bouton « Démarrer son service » sur le panneau de service configuré avec `/setup`.", "en": "Use the Start service button on the service panel configured with `/setup`."}
+  },
+  {
+    "questions": ["comment mettre en pause le service", "comment reprendre le service", "how to pause service"],
+    "answers": {"fr": "Le bouton « Pause / Reprise de service » du panneau permet de suspendre puis de reprendre votre session.", "en": "Use the Pause / Resume button on the service panel."}
+  },
+  {
+    "questions": ["comment terminer le service", "comment arrêter le service", "how to stop service"],
+    "answers": {"fr": "Cliquez sur « Fin de service » dans le panneau de service. Votre temps effectif est enregistré.", "en": "Click Stop service on the service panel. Your effective time is saved."}
+  },
+  {
+    "questions": ["pourquoi le bot est en maintenance", "quand finit la maintenance", "why is maintenance active"],
+    "answers": {"fr": "Chronis effectue un redémarrage quotidien à 03:00 UTC. Une fois reconnecté, son statut revient automatiquement à la normale. Si la maintenance dure, contactez l'administrateur du serveur.", "en": "Chronis restarts daily at 03:00 UTC. Its status returns to normal after reconnecting. If maintenance lasts, contact your server administrator."}
+  },
+  {
+    "questions": ["comment voir mes statistiques", "comment voir mon bilan", "how to see my stats"],
+    "answers": {"fr": "La commande `/sum` affiche vos statistiques. Le bilan hebdomadaire est envoyé dans le salon des logs lorsque la purge hebdomadaire est configurée.", "en": "Use `/sum` for your statistics. The weekly report is sent to the log channel when the weekly reset is configured."}
+  },
+  {
+    "questions": ["quel est le code promo hosterfy", "quel est le lien hosterfy", "hosterfy promo code"],
+    "answers": {"fr": "Code promo : **CHRONISBOT** (-5 %). Lien : https://www.hosterfy.com/?a=chronisbot", "en": "Promo code: **CHRONISBOT** (5% off). Link: https://www.hosterfy.com/?a=chronisbot"}
+  }
+]

@@ -1,305 +1,191 @@
-# 🇫🇷 **Chronis Bot – Gestion de Service RP & RDV**
+# 🇫🇷 Chronis Bot – Gestion de Service RP & RDV
 
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
-![Discord.py](https://img.shields.io/badge/discord.py-2.0%2B-5865F2)
+![Discord.py](https://img.shields.io/badge/discord.py-2.4%2B-5865F2)
 ![Database](https://img.shields.io/badge/database-MySQL-orange)
 
-**Chronis** est un bot Discord avancé et optimisé pour les communautés Roleplay (Police, EMS, Mécaniciens, etc.). Il gère automatiquement les temps de service, centralise les demandes de rendez-vous, gère les absences et génère des statistiques visuelles détaillées.
+**Chronis** aide les communautés Roleplay (Police, EMS, mécaniciens et autres) à suivre les temps de service, gérer les rendez-vous et les absences, et consulter les statistiques de leurs équipes.
 
 ---
 
-## 🚀 **Nouveautés & Fonctionnalités**
+## 🚀 Nouveautés & Fonctionnalités
 
-### ⏱️ **Gestion de Service (Time Tracking)**
+### ⏱️ Gestion de service
 
-- **Interface Fluide** : Boutons persistants (Début / Pause / Fin).
-- **Temps Réel** : Panneau mis à jour automatiquement toutes les **10 secondes**.
-- **Calculs Précis** : Prise en compte des pauses et du temps effectif.
-- **Sécurité** : Redémarrage automatique à **04h00 (Heure France)** pour clôturer les sessions oubliées.
+- Boutons persistants **Début / Pause / Fin** et panneau actualisé toutes les **10 secondes**.
+- Calcul du temps effectif, pauses comprises, et statistiques individuelles ou globales.
+- Maintenance quotidienne à **04 h, heure de Paris** : fermeture des sessions actives, redémarrage et confirmation au retour du bot.
+- Mode maintenance global activable uniquement par le propriétaire avec `+maintenance on` ; il réserve les panneaux et commandes `/` au propriétaire.
 
-### 🏥 **Système de Rendez-Vous (RDV) [NOUVEAU]**
+### 🏥 Rendez-vous et absences
 
-- **Configuration Personnalisée** : Créez vos propres motifs de RDV via `/config_rdv`.
-- **Prise de RDV** : Menu déroulant interactif pour les joueurs.
-- **Gestion Staff** : Accepter ou refuser une demande en un clic.
-- **Tickets Automatiques** : Création d'un salon privé avec le patient.
-- **Transcripts** : Génération automatique d'un fichier `.txt` de la conversation à la fermeture.
+- Motifs de RDV configurables avec `/config_rdv`, demande par menu et traitement par le staff.
+- Tickets privés avec transcription à la fermeture.
+- Déclaration et consultation des absences.
 
-### 📊 **Statistiques & Graphiques [NOUVEAU]**
+### 📊 Statistiques et Chronis Premium
 
-- **Personnelles** (`/sum`) : Temps total, moyenne, date de premier et dernier service.
-- **Globales** (`/sumall`) : Classement (Leaderboard) complet du serveur.
-- **Audit Serveur** (`/server_stats`) : **Graphiques générés dynamiquement** (Activité hebdo, moyenne par jour/heure).
-- **Historique** (`/details`) : Liste paginée des 10 dernières sessions avec dates exactes.
+- `/sum`, `/sumall`, `/server_stats`, `/details` et `/presence` pour suivre l'activité.
+- **Premium** : bilans hebdomadaires avec CSV dans le salon des logs, rappels d'objectifs, purge paramétrable, couleurs personnalisées, motifs de RDV illimités et alerte `/defcon`.
+- L'export `/export` est accessible avec Premium ou après un vote Top.gg valide.
+- Le propriétaire peut attribuer ou retirer un droit Premium manuel avec `+add_premium <ID>` et `+remove_premium <ID>` ; `+premium_list` affiche les serveurs Premium.
+- Les serveurs Premium ne voient **aucune publicité partenaire**. Sur les serveurs gratuits, l'offre Hosterfy et le code **CHRONISBOT** apparaissent seulement dans `/about`, sur un bouton de `/help` et dans la confirmation privée du premier `/setup` réussi.
 
-### 🛠️ **Architecture Technique Optimisée**
+### 💬 Aide et messages privés
 
-- **MySQL (aiomysql)** : Base de données robuste avec pool de connexions asynchrone.
-- **Index SQL** : Recherches instantanées même avec beaucoup de données.
-- **Données Lisibles** : La BDD stocke désormais les durées en format texte (`1h 30m`) en plus du format brut pour faciliter la maintenance.
-- **Auto-Repair** : Scripts de mise à jour automatique de la structure BDD inclus.
+- `/help` présente les commandes et invite à envoyer un MP à Chronis pour obtenir de l'aide.
+- Le bot répond aux questions reconnues dans `faq.json`. Chaque MP est aussi transmis au propriétaire, qui dispose d'un bouton **Répondre** pour répondre directement à l'utilisateur.
+- Aucune publicité automatique dans les annonces de 04 h, les redémarrages, les rappels en MP ou les bilans.
+
+### 🛠️ Architecture
+
+- Python et `discord.py`, avec MySQL/MariaDB via `aiomysql`.
+- Création des tables et ajout des colonnes ou index manquants au démarrage.
+- Interface en français et en anglais.
 
 ---
 
-## ⚙️ **Installation & Configuration**
+## ⚙️ Installation & Configuration
 
 ### 1. Prérequis
 
-- Python 3.9 ou supérieur.
-- Un serveur **MySQL** (local ou distant/VPS).
-- Un Bot créé sur le [Portail Développeur Discord](https://discord.com/developers/applications).
+- Python **3.9 ou plus récent** et une base **MySQL/MariaDB**.
+- Un bot créé dans le [Portail Développeur Discord](https://discord.com/developers/applications).
+- Les intents **Message Content** et **Server Members** activés pour les commandes `+`, les MP et les fonctions liées aux membres.
 
 ### 2. Installation
 
-Clonez le dépôt et installez les dépendances :
-
 ```bash
-git clone [https://github.com/votre-repo/chronis-bot.git](https://github.com/votre-repo/chronis-bot.git)
-cd chronis-bot
-pip install -r requirements.txt
+git clone https://github.com/matteohooliga/BotChronis.git
+cd BotChronis
+python3 -m pip install -r requirements.txt
 ```
 
-### 3\. Configuration (.env)
+`app.py`, `bot.py` et **`commands.py` doivent être à la racine** du dossier. Le bot accepte encore `cogs/commands.py` pour les anciens déploiements, mais donne la priorité à `commands.py` à la racine. Gardez une seule copie.
 
-Créez un fichier `.env` à la racine et remplissez-le :
+### 3. Configuration du `.env`
+
+Le fichier `.env` fourni dans la copie locale est un **modèle sans identifiants**. Renseignez ses valeurs **sur le serveur** avant le démarrage :
 
 ```env
-DISCORD_TOKEN=votre_token_discord
-DB_HOST=ip_de_votre_bdd
-DB_PORT=3306
-DB_USER=utilisateur_bdd
-DB_PASSWORD=mot_de_passe_bdd
-DB_NAME=nom_de_la_base
+DISCORD_TOKEN=
+TOPGG_TOKEN=
+
+DB_HOST=""
+DB_PORT=""
+DB_USER=""
+DB_PASSWORD=""
+DB_NAME=""
 ```
 
-### 4\. Démarrage
+`DISCORD_TOKEN` et les paramètres `DB_*` sont nécessaires. Renseignez `DB_PORT` avec un nombre, généralement `3306`. `TOPGG_TOKEN` sert à vérifier les votes Top.gg pour l'export gratuit ; il peut rester vide si cette possibilité n'est pas utilisée. **Ne publiez jamais un `.env` rempli de secrets.** Le fichier est ignoré par `.gitignore` : transmettez-le séparément à l'hébergeur. Si un ancien `.env` a déjà été publié, retirez-le du dépôt et remplacez les identifiants concernés.
 
-Le bot initialise automatiquement les tables et les index SQL au premier lancement.
-
-**Windows :**
-Lancez simplement `start_bot.bat`.
-
-**Linux :**
-Utilisez le script fourni pour que le bot redémarre en cas de crash :
+### 4. Démarrage
 
 ```bash
-chmod +x start.sh
-./start.sh
+python3 app.py
 ```
 
-_(Astuce : Utilisez `screen` pour laisser le bot tourner en arrière-plan)._
+Sur **Row Hosting / Pterodactyl**, placez les fichiers directement dans `/home/container/`, gardez `PY_FILE=app.py` et `REQUIREMENTS_FILE=requirements.txt`. Le gestionnaire de processus doit relancer le bot après un redémarrage demandé par `+restart` ou par la maintenance quotidienne. Avec **PM2**, le fichier `ecosystem.config.cjs` est fourni (`pm2 start ecosystem.config.cjs`, puis `pm2 save`).
+
+La base est initialisée au premier lancement. Le statut normal du bot revient après le redémarrage ; seul `+maintenance on` active la maintenance globale.
 
 ---
 
-## 📚 **Liste Complète des Commandes**
+## 📚 Liste des commandes
 
-### 👤 **Commandes Publiques (Tout le monde)**
+### 👤 Commandes publiques
 
-_Accessibles à tous les membres._
+| Commande | Description |
+| :-- | :-- |
+| `/sum [user]` | Statistiques personnelles ou d'un autre membre. |
+| `/sumall` | Classement du serveur. |
+| `/absence` et `/absences_list` | Déclarer une absence et consulter les absences en cours. |
+| `/feedback` | Envoyer un avis ou signaler un bug. |
+| `/help` | Aide interactive et possibilité de contacter le bot en MP. |
+| `/about` | Informations sur Chronis. |
+| `/vote` | Lien vers le vote Top.gg. |
+| `/premium` | Voir le statut Premium ou découvrir l'abonnement. |
 
-| Commande          | Description                                                                         |
-| :---------------- | :---------------------------------------------------------------------------------- |
-| **/sum** `[user]` | Affiche les statistiques personnelles (Temps, Moyenne, Dates) ou celles d'un autre. |
-| **/sumall**       | Affiche le classement global (Leaderboard) du serveur.                              |
-| **/absence**      | Déclarer une absence officielle (Date début/fin + Raison).                          |
-| **/feedback**     | Envoyer un avis ou signaler un bug au développeur.                                  |
-| **/help**         | Affiche le menu d'aide interactif.                                                  |
-| **/about**        | Affiche les informations techniques et statistiques du bot.                         |
+### 👮 Staff / Direction — permission « Gérer le serveur »
 
-### 👮 **Commandes Staff / Direction**
+| Commande | Description |
+| :-- | :-- |
+| `/forcestart [user]`, `/pause [user]` | Démarrer, mettre en pause ou reprendre un service. |
+| `/edittime [user]`, `/details [user]` | Ajuster un temps ou consulter l'historique. |
+| `/pauselist`, `/employees` | Voir les agents en pause ou la liste des employés. |
+| `/delrole [user]` | Retirer les rôles configurés. |
 
-_Nécessite la permission "Gérer le serveur" ou un rôle spécifique._
+### 👑 Administration — permission « Administrateur »
 
-| Commande                 | Description                                                |
-| :----------------------- | :--------------------------------------------------------- |
-| **/forcestart** `[user]` | Démarre de force la prise de service d'un joueur.          |
-| **/pause** `[user]`      | Met en pause (ou reprend) de force le service d'un joueur. |
-| **/details** `[user]`    | Historique détaillé des 10 dernières sessions d'un joueur. |
-| **/edittime** `[user]`   | Ajouter ou retirer manuellement du temps à un joueur.      |
-| **/pauselist**           | Affiche la liste des agents actuellement en pause.         |
+| Commande | Description |
+| :-- | :-- |
+| `/setup`, `/config_rdv` | Configurer le bot et les motifs de RDV. |
+| `/server_stats`, `/presence [channel]` | Statistiques du serveur, agents en service ou recensement des réactions. |
+| `/reaction_list [channel]`, `/service_list` | Accès direct aux vues des réactions ou du service. |
+| `/close [user]`, `/cancel [user]` | Fermer ou annuler une session. |
+| `/remove_user [user]`, `/reset_server` | Effacer des données ou réinitialiser une période. |
+| `/auto_role [user]` | Attribuer les rôles automatiques configurés. |
+| `/export` | Télécharger un CSV avec Premium ou un vote valide. |
+| `/defcon` | Diffuser une alerte sur un serveur Premium. |
 
-### 👑 **Commandes Administrateur**
+### 🛠️ Commandes avec le préfixe `+`
 
-_Nécessite la permission "Administrateur"._
-
-| Commande                  | Description                                                     |
-| :------------------------ | :-------------------------------------------------------------- |
-| **/setup**                | Panneau de configuration principal (Salons, Rôles, Langue).     |
-| **/config_rdv**           | Configurer le système de Rendez-Vous et les motifs.             |
-| **/server_stats**         | Audit complet du serveur avec graphiques d'activité.            |
-| **/presence** `[channel]` | Liste des agents en service ou recensement des réactions.       |
-| **/close** `[user]`       | Ferme de force la session d'un joueur (sauvegarde le temps).    |
-| **/cancel** `[user]`      | Annule une session en cours **sans** sauvegarder (suppression). |
-| **/remove_user** `[user]` | Supprime définitivement toutes les données d'un joueur.         |
-| **/reset_server**         | Réinitialise les données (Semaine/Mois/Tout).                   |
-| **/auto_role** `[user]`   | Attribue manuellement les rôles automatiques configurés.        |
-
-### 🛠️ **Commandes Système (Préfixe +)**
-
-_Réservées au Propriétaire (Owner) ou aux Admins pour la maintenance._
-
-| Commande          | Permission | Description                                                         |
-| :---------------- | :--------- | :------------------------------------------------------------------ |
-| **+sync**         | Admin      | Synchronise les commandes Slash (`/`) sur le serveur.               |
-| **+restart**      | Admin      | Redémarre le bot (utile après une mise à jour).                     |
-| **+fix_doublons** | Owner      | Nettoie et resynchronise les commandes pour supprimer les doublons. |
-| **+maintenance**  | Owner      | Active/Désactive le mode maintenance (bloque les boutons).          |
-| **+debug**        | Owner      | Recharge l'extension `cogs` sans éteindre le bot.                   |
-| **+infos**        | Owner      | Affiche la liste des serveurs où le bot est présent.                |
-| **+stop**         | Owner      | Arrête complètement le processus du bot.                            |
-| **+start**        | Owner      | Envoie un message de confirmation "Bot en ligne".                   |
+| Commande | Accès | Description |
+| :-- | :-- | :-- |
+| `+help` | Tous | Liste des commandes préfixées. |
+| `+sync`, `+restart` | Admin | Synchroniser les commandes ou redémarrer le bot. |
+| `+infos` | Propriétaire | Serveurs classés par membres, avec leur statut Premium. |
+| `+premium_list` | Propriétaire | Liste des serveurs Premium. |
+| `+add_premium <ID>`, `+remove_premium <ID>` | Propriétaire | Ajouter ou retirer un droit Premium manuel. Un abonnement Discord reste géré par Discord. |
+| `+maintenance [statut\|on\|off]` | Propriétaire | Consulter ou modifier la maintenance globale. |
+| `+sync_global`, `+fix_doublons`, `+debug` | Propriétaire | Gérer la synchronisation et recharger les commandes. |
+| `+start`, `+stop` | Propriétaire | Confirmer que le bot est en ligne ou l'arrêter. |
 
 ---
 
----
+# 🇬🇧 Chronis Bot – RP Service & Appointment Manager
 
-# 🇬🇧 **Chronis Bot – RP Service & Appointment Manager**
+**Chronis** helps roleplay communities track duty time, manage appointments and absences, and understand team activity.
 
-**Chronis** is a powerful and optimized Discord bot designed for Roleplay communities (Police, EMS, Mechanics, etc.). It automatically manages on-duty time, appointment booking, leaves of absence, and generates detailed statistics with graphs.
+## 🚀 Features
 
----
+- Persistent **Start / Pause / End** controls; service panel refreshes every **10 seconds**.
+- Daily restart at **04:00 Paris time** closes active sessions and restores the normal status on reconnect.
+- Appointment reasons, booking menus, private tickets and transcripts; absence management.
+- Personal and server statistics, charts and a leaderboard.
+- **Premium** includes weekly CSV reports, configurable reset time, goal reminders, custom colours, unlimited appointment reasons and `/defcon` alerts. The owner can grant or revoke manual Premium rights.
+- Premium servers see **no partner ads**. Free servers see the Hosterfy offer and **CHRONISBOT** code only in `/about`, an on-demand `/help` button and the private confirmation of their first `/setup`.
+- Users can DM Chronis for help. Known questions receive a knowledge-base answer; the owner also receives the message and can reply through a button.
 
-## 🚀 **Key Features**
+## ⚙️ Installation & Setup
 
-### ⏱️ **Service Management (Time Tracking)**
+1. Use Python **3.9+** and MySQL/MariaDB. Enable **Message Content** and **Server Members** intents in the Discord Developer Portal.
+2. Clone the repository and install dependencies:
 
-- **Interactive Interface**: Persistent buttons (Start / Pause / End).
-- **Real-time**: Panel auto-refreshes every **10 seconds**.
-- **Accurate**: Handles breaks and effective working time accurately.
-- **Safety**: Auto-restart at **04:00 AM (French Time)** to close forgotten sessions.
+   ```bash
+   git clone https://github.com/matteohooliga/BotChronis.git
+   cd BotChronis
+   python3 -m pip install -r requirements.txt
+   ```
 
-### 🏥 **Appointment System (RDV) [NEW]**
+3. Fill in `.env` **on the server** using the blank template above. `DISCORD_TOKEN` and `DB_*` values are required; `TOPGG_TOKEN` enables vote checks for the free export option. Never commit a filled `.env`.
+4. Run `python3 app.py`. On Row Hosting / Pterodactyl, place all runtime files directly in `/home/container/`, set `PY_FILE=app.py` and `REQUIREMENTS_FILE=requirements.txt`. For PM2, use `ecosystem.config.cjs`.
 
-- **Custom Config**: Define your own appointment reasons via `/config_rdv`.
-- **Booking**: Players select a reason via a dropdown menu.
-- **Staff Management**: Accept or refuse requests instantly.
-- **Tickets**: Automatic creation of a private channel with the user.
-- **Transcripts**: Generates a `.txt` file of the conversation when closed.
+Keep `commands.py` beside `bot.py` at the repository root. The bot accepts `cogs/commands.py` only as a fallback for older deployments.
 
-### 📊 **Advanced Statistics [NEW]**
+## 📚 Commands
 
-- **Personal** (`/sum`): Total time, average, first and last shift dates.
-- **Global** (`/sumall`): Full server leaderboard.
-- **Server Audit** (`/server_stats`): **Dynamically generated graphs** (Weekly activity, daily averages).
-- **History** (`/details`): Paged list of the last 10 sessions with exact timestamps.
+| Access | Commands | Purpose |
+| :-- | :-- | :-- |
+| Everyone | `/sum`, `/sumall`, `/absence`, `/absences_list`, `/feedback`, `/help`, `/about`, `/vote`, `/premium` | Statistics, absences, help and bot information. |
+| Manage Server | `/forcestart`, `/pause`, `/edittime`, `/details`, `/pauselist`, `/employees`, `/delrole` | Manage staff activity and records. |
+| Administrator | `/setup`, `/config_rdv`, `/server_stats`, `/presence`, `/reaction_list`, `/service_list`, `/close`, `/cancel`, `/remove_user`, `/reset_server`, `/auto_role`, `/export`, `/defcon` | Configure and manage the server. `/defcon` needs Premium; `/export` needs Premium or a valid vote. |
+| Administrator | `+sync`, `+restart` | Sync commands or restart Chronis. |
+| Bot owner | `+infos`, `+premium_list`, `+add_premium <ID>`, `+remove_premium <ID>`, `+maintenance`, `+sync_global`, `+fix_doublons`, `+debug`, `+start`, `+stop` | Manage the bot and manual Premium rights. |
 
-### 🛠️ **Optimized Tech Stack**
-
-- **MySQL (aiomysql)**: Robust database with async connection pooling.
-- **SQL Indexes**: Instant queries even with large datasets.
-- **Human-Readable DB**: Data is stored with human-readable formats (e.g., `1h 30m`) alongside raw milliseconds for easier maintenance.
-- **Auto-Repair**: Automatic DB structure update scripts included.
-
----
-
-## ⚙️ **Installation & Setup**
-
-### 1\. Prerequisites
-
-- Python 3.9 or higher.
-- A **MySQL** server (local or remote/VPS).
-- A Bot created on the [Discord Developer Portal](https://www.google.com/url?sa=E&source=gmail&q=https://discord.com/developers/applications).
-
-### 2\. Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone [https://github.com/your-repo/chronis-bot.git](https://github.com/your-repo/chronis-bot.git)
-cd chronis-bot
-pip install -r requirements.txt
-```
-
-### 3\. Configuration (.env)
-
-Create a `.env` file at the root folder:
-
-```env
-DISCORD_TOKEN=your_discord_token
-DB_HOST=your_db_ip
-DB_PORT=3306
-DB_USER=db_user
-DB_PASSWORD=db_password
-DB_NAME=db_name
-```
-
-### 4\. Start
-
-The bot automatically initializes SQL tables and indexes on the first run.
-
-**Windows:**
-Just run `start_bot.bat`.
-
-**Linux:**
-Use the provided script to keep the bot running:
-
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-_(Tip: Use `screen` to keep it running in the background)._
+The `+help` command is available to everyone. The weekly report runs only on Premium servers and contains no advertising.
 
 ---
 
-## 📚 **Complete Command List**
-
-### 👤 **Public Commands (Everyone)**
-
-_Available to all server members._
-
-| Command           | Description                                                      |
-| :---------------- | :--------------------------------------------------------------- |
-| **/sum** `[user]` | Display personal stats (Time, Avg, Dates) or check another user. |
-| **/sumall**       | Display the server leaderboard.                                  |
-| **/absence**      | Declare an official absence (Dates + Reason).                    |
-| **/feedback**     | Send feedback or report a bug to the developer.                  |
-| **/help**         | Show the interactive help menu.                                  |
-| **/about**        | Display bot technical info and stats.                            |
-
-### 👮 **Staff / Management Commands**
-
-_Requires "Manage Server" permission or specific role._
-
-| Command                  | Description                                 |
-| :----------------------- | :------------------------------------------ |
-| **/forcestart** `[user]` | Force start a player's service session.     |
-| **/pause** `[user]`      | Force pause (or resume) a player's service. |
-| **/details** `[user]`    | Detailed history of the last 10 sessions.   |
-| **/edittime** `[user]`   | Manually add or remove time from a player.  |
-| **/pauselist**           | Show the list of agents currently on pause. |
-
-### 👑 **Admin Commands**
-
-_Requires "Administrator" permission._
-
-| Command                   | Description                                           |
-| :------------------------ | :---------------------------------------------------- |
-| **/setup**                | Main configuration panel (Channels, Roles, Language). |
-| **/config_rdv**           | Configure the Appointment system and reasons.         |
-| **/server_stats**         | Full server audit with activity graphs.               |
-| **/presence** `[channel]` | List of on-duty agents or reaction census.            |
-| **/close** `[user]`       | Force close a session (saves time).                   |
-| **/cancel** `[user]`      | Cancel a session **without** saving (deletion).       |
-| **/remove_user** `[user]` | Permanently delete all data for a user.               |
-| **/reset_server**         | Wipe data (Weekly/Monthly/Total).                     |
-| **/auto_role** `[user]`   | Manually assign configured auto-roles.                |
-
-### 🛠️ **System Commands (Prefix +)**
-
-_Reserved for Bot Owner or Admins for maintenance._
-
-| Command           | Permission | Description                                      |
-| :---------------- | :--------- | :----------------------------------------------- |
-| **+sync**         | Admin      | Sync Slash commands (`/`) on the current server. |
-| **+restart**      | Admin      | Restart the bot (useful after updates).          |
-| **+fix_doublons** | Owner      | Clean and resync commands to fix duplicates.     |
-| **+maintenance**  | Owner      | Toggle maintenance mode (locks buttons).         |
-| **+debug**        | Owner      | Reload the `cogs` extension without stopping.    |
-| **+infos**        | Owner      | Show the list of servers using the bot.          |
-| **+stop**         | Owner      | Completely stop the bot process.                 |
-| **+start**        | Owner      | Send a "Bot Online" confirmation message.        |
-
-```
-
-```
+MIT licence: see [LICENSE](LICENSE).

@@ -1,0 +1,16 @@
+# Ne jamais publier les identifiants locaux
+.env
+.env.*
+*.pem
+*.key
+
+# Fichiers créés au fonctionnement
+restart_context.json
+*.log
+logs/
+.local/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.DS_Store

@@ -1,32 +1,36 @@
-# ==============================================================================
-#                            FICHIER DE CONFIGURATION
-# ==============================================================================
+import os
+from dotenv import load_dotenv
+
+# Chargement des variables d'environnement
+load_dotenv()
 
 # Informations du bot
 BOT_NAME = "Chronis"
 BOT_COLOR = 0x6100bd  # VIOLET (Couleur principale)
-BOT_VERSION = "3.0.1"
+BOT_VERSION = "3.2.0"
 OWNER_ID = "820572214750871573"
 
 # --- CONFIGURATION FEEDBACK & LOGS ---
-# Salon où VOUS recevez les feedbacks (Avis/Bugs)
-DEV_FEEDBACK_CHANNEL_ID = ENTER_ID_HERE
-# Rôle à mentionner lors d'un feedback
-DEV_FEEDBACK_ROLE_ID = ENTER_ID_HERE
-# Salon où VOUS recevez les logs techniques (+stop, +restart...)
-DEV_LOG_CHANNEL_ID = ENTER_ID_HERE
+DEV_FEEDBACK_CHANNEL_ID = 1441031492061892670
+DEV_FEEDBACK_ROLE_ID = 1442965292119757037
+DEV_LOG_CHANNEL_ID = 1441382041831739526
 
-# --- CONFIGURATION BASE DE DONNEES EXTERNE ---
-DB_HOST = ""       # L'adresse IP (server)
-DB_PORT = 3306                   # Port standard MySQL
-DB_USER = ""     # L'utilisateur (uid)
-DB_PASSWORD = "" # Le mot de passe
-DB_NAME = ""        # Le nom de la base
+# --- CONFIGURATION BASE DE DONNÉES (Sécurisée via .env) ---
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = int(os.getenv("DB_PORT", 3306))
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "chronos")
 
 # Liens
-GITHUB_LINK = ""
+GITHUB_LINK = "https://github.com/matteohooliga/BotChronis"
 SUPPORT_LINK = "" 
-VOTE_LINK = "" # 
+VOTE_LINK = "https://top.gg/bot/1440743920953725118/vote"
+
+# --- MARKETING & AFFILIATION ---
+INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=1440743920953725118&permissions=8&scope=bot%20applications.commands"
+AFFILIATE_LINK = "https://www.hosterfy.com/?a=chronisbot"
+AFFILIATE_TEXT = "🚀 Hébergez votre serveur avec -5% de réduction chez notre partenaire Hosterfy avec le code promo **CHRONISBOT** !"
 
 # Configuration des embeds
 EMBED_TITLE = "🔍 Utilisateur(s) en service"
@@ -35,24 +39,23 @@ EMBED_SINCE = "• Depuis"
 EMBED_FOOTER = f"Chronis V{BOT_VERSION} | By matteohooliga"
 
 # --- COULEURS DYNAMIQUES ---
-COLOR_GREEN = 0x00FF00     # Vert (Activité normale > 5 personnes)
-COLOR_ORANGE = 0xF39C12    # Orange (Maintenance / Activité faible)
-COLOR_RED = 0xFF0000       # Rouge (Vide / Erreur / Arrêt)
-COLOR_PURPLE = 0x6100bd    # Violet (Couleur par défaut)
-COLOR_DARK_BLUE = 0x00008B # Bleu Foncé (PAUSE)
-
-# Alias pour le code (Pause pointe vers Bleu Foncé)
+COLOR_GREEN = 0x00FF00
+COLOR_ORANGE = 0xF39C12
+COLOR_RED = 0xFF0000
+COLOR_PURPLE = 0x6100bd
+COLOR_DARK_BLUE = 0x00008B
 COLOR_BLUE = COLOR_DARK_BLUE 
 
-# Seuil pour passer l'embed en vert (5 personnes ou plus)
 THRESHOLD_LOW = 5
-
-# Boutons (IDs fixes pour le code)
 BUTTONS = {
     "start": {"custom_id": "service_start", "emoji": "✨"},
     "pause": {"custom_id": "service_pause", "emoji": "🍎"},
     "stop": {"custom_id": "service_stop", "emoji": "🌙"}
 }
+
+# --- CONFIGURATION PREMIUM ---
+PREMIUM_SKU_ID = 1480905473665536182
+FREE_RDV_LIMIT = 3
 
 # ==============================================================================
 #                            TRADUCTIONS (FR / EN)
@@ -75,8 +78,9 @@ TRANSLATIONS = {
         # --- PANNEAU SETUP (/setup) ---
         "setup_panel_title": "🛠️ Panneau de Configuration",
         "setup_panel_desc": "Configurez Chronis via les menus ci-dessous. Cliquez **Valider** lorsque vous avez terminé.",
-        "setup_panel_desc_1": "PAGE 1/2 : **Général**\nConfigurez la langue et les salons.",
-        "setup_panel_desc_2": "PAGE 2/2 : **Rôles**\nConfigurez les rôles spéciaux.",
+        "setup_panel_desc_1": "PAGE 1/3 : **Général**\nConfigurez la langue et les salons.",
+        "setup_panel_desc_2": "PAGE 2/3 : **Rôles**\nConfigurez les rôles spéciaux.",
+        "setup_panel_desc_3": "PAGE 3/3 : **Tâches Automatiques (Premium)**\nChoisissez le jour de la purge automatique.\n*(L'heure exacte sera demandée en cliquant sur Valider)*",
         "setup_btn_next": "Suivant ➡️", 
         "setup_btn_back": "⬅️ Retour",
         "setup_ph_lang": "🌍 Choisir la langue",
@@ -94,7 +98,6 @@ TRANSLATIONS = {
         "log_setup_desc": "Ce salon recevra désormais les logs d'activité.",
         "setup_role": "\nRôle Direction : {role}.",
         "setup_val_none": "Aucun",
-        
 
         # --- MESSAGES DE SERVICE ---
         "service_started": "✅ **Service démarré** ! Bon courage.",
@@ -145,7 +148,7 @@ TRANSLATIONS = {
         "et_modal_remove": "Retirer du temps",
         "et_label_hours": "Heures",
         "et_label_minutes": "Minutes",
-        "et_label_seconds": "Seconds",
+        "et_label_seconds": "Secondes",
         "et_placeholder": "0",
 
         # --- ADMIN PAUSE & START ---
@@ -286,7 +289,7 @@ TRANSLATIONS = {
         "about_val_users": "**Utilisateurs** : `{val}`",
         "about_val_version": "**Python** : `{py}` | **D.py** : `{dpy}`",
         "about_maint_title": "🔄 Maintenance Automatique",
-        "about_maint_desc": "🕒 **04h00** : Redémarrage journalier.\n⚠️ Tous les services actifs sont fermés automatiquement.",
+        "about_maint_desc": "🕒 **03h00 UTC** : Redémarrage journalier.\n⚠️ Tous les services actifs sont fermés automatiquement.",
 
         # --- SERVER STATS (Statistiques Avancées) ---
         "srv_stats_title": "📈 Audit d'Activité Serveur",
@@ -352,11 +355,18 @@ TRANSLATIONS = {
         "dm_close_reason": "Raison",
 
 
-        # --- HELP DÉTAILLÉ FR (Divisé en 2 parties pour éviter la limite de 1024 chars) ---
-        "help_title": "📚 Aide", "help_desc": "Choisir une catégorie.",
-        "help_cat_user": "Utilisateurs", "help_cat_admin": "Administrateur",
-        "help_back": "Retour", "help_back_lang": "Langues",
-        "help_user_desc": "Commandes publiques :", "help_admin_desc": "Commandes staff :",
+        # --- HELP DÉTAILLÉ FR ---
+        "help_title": "📚 Menu d'Aide", 
+        "help_desc": "Veuillez choisir une catégorie ci-dessous pour voir les commandes disponibles.",
+        "help_contact_dm": "💬 Besoin de plus d'aide ? Envoie un message privé à Chronis : le propriétaire du bot recevra ton message et pourra te répondre.",
+        "help_cat_user": "Utilisateurs", 
+        "help_cat_admin": "Administrateurs",
+        "help_cat_premium": "Premium",
+        "help_back": "Retour", 
+        "help_back_lang": "Changer la Langue",
+        "help_user_desc": "Commandes accessibles à tous les membres :", 
+        "help_admin_desc": "Commandes réservées au Staff :",
+        "help_premium_desc": "✨ **Fonctionnalités et commandes exclusives à l'abonnement :**",
         
         "help_cmds_user": (
             "**• `/about`**\n"
@@ -388,8 +398,6 @@ TRANSLATIONS = {
             "└ Configurer le système de rendez-vous.\n\n"
             "**• `/delrole [joueur]`**\n"
             "└ Retirer tous les rôles sauf Citoyen.\n\n"
-            "**• `/details [joueur]`**\n"
-            "└ Historique détaillé des dernières sessions.\n\n"
             "**• `/edittime`**\n"
             "└ Modifier manuellement le temps (Ajout/Retrait).\n\n"
             "**• `/employees`**\n"
@@ -403,16 +411,35 @@ TRANSLATIONS = {
             "└ Forcer la pause d'un agent.\n\n"
             "**• `/pauselist`**\n"
             "└ Affiche la liste des agents en pause.\n\n"
-            "**• `/presence [salon]`**\n"
-            "└ Liste des agents en service.\n\n"
+            "**• `/reaction_list [salon]`**\n"
+            "└ Liste des agents actifs/absents via réactions.\n\n"
             "**• `/remove_user`**\n"
             "└ Supprimer définitivement le dossier d'un agent.\n\n"
             "**• `/reset_server`**\n"
             "└ Réinitialisation globale (Hebdo/Mensuel).\n\n"
             "**• `/server_stats`**\n"
-            "└ Statistiques et graphiques serveur.\n\n"
+            "└ Statistiques et graphiques avancés du serveur.\n\n"
             "**• `/setup`**\n"
-            "└ Panneau de configuration générale."
+            "└ Panneau de configuration générale du bot."
+        ),
+
+        "help_cmds_premium": (
+            "**• `/defcon`**\n"
+            "└ Diffuser une alerte d'urgence personnalisée.\n\n"
+            "**• `/details [joueur]`**\n"
+            "└ Accéder à l'historique détaillé des sessions.\n\n"
+            "**• `/export`**\n"
+            "└ Télécharger les statistiques globales en format Excel.\n\n"
+            "**• `/premium`**\n"
+            "└ Gérer ou découvrir l'abonnement du serveur.\n\n"
+            "**🌟 Avantages Inclus :**\n"
+            "• 📊 **Analytics Comparatifs** : Rapport hebdo avec progression de l'activité (%).\n"
+            "• 🔔 **Relance Quota Auto** : MP automatique aux retardataires 24h avant la purge.\n"
+            "• 🏷️ Rôle `En Service` automatique.\n"
+            "• 🎨 Personnalisation de la couleur (Embeds).\n"
+            "• ⏰ Purge automatique paramétrable.\n"
+            "• 🏥 Motifs de RDV illimités.\n"
+            "• 🔕 Aucune publicité partenaire dans Chronis."
         ),
 
         # --- LOGS GÉNÉRAUX ---
@@ -470,8 +497,9 @@ TRANSLATIONS = {
         # --- SETUP PANEL (/setup) ---
         "setup_panel_title": "🛠️ Configuration Panel",
         "setup_panel_desc": "Configure Chronis via the menus below. Click **Validate** when finished.",
-        "setup_panel_desc_1": "PAGE 1/2: **General**\nConfigure language and channels.",
-        "setup_panel_desc_2": "PAGE 2/2: **Roles**\nConfigure special roles.",
+        "setup_panel_desc_1": "PAGE 1/3: **General**\nConfigure language and channels.",
+        "setup_panel_desc_2": "PAGE 2/3: **Roles**\nConfigure special roles.",
+        "setup_panel_desc_3": "PAGE 3/3: **Tasks (Premium)**\nSelect purge day.\n*(Exact time will be asked upon validation)*",
         "setup_btn_next": "Next ➡️", 
         "setup_btn_back": "⬅️ Back",
         "setup_ph_lang": "🌍 Choose Language",
@@ -589,7 +617,7 @@ TRANSLATIONS = {
         "delrole_error_config": "❌ Error: **Citizen Role** is not configured in `/setup` (Page 2).",
         "delrole_no_roles": "⚠️ This user had no roles to remove.",
         
-        # --- ADMIN COMMANDS (+) (Split in 2) ---
+        # --- ADMIN COMMANDS (+) ---
         "cmd_sync_start": "⏳ **Syncing in progress...**",
         "cmd_sync_end": "✅ **Sync complete!** ({count} commands)",
         "cmd_restart_start": "👋 **Restarting in progress...**",
@@ -680,7 +708,7 @@ TRANSLATIONS = {
         "about_val_users": "**Users**: `{val}`",
         "about_val_version": "**Python**: `{py}` | **D.py**: `{dpy}`",
         "about_maint_title": "🔄 Automatic Maintenance",
-        "about_maint_desc": "🕒 **04:00 AM**: Daily restart.\n⚠️ All active sessions are automatically closed.",
+        "about_maint_desc": "🕒 **03:00 UTC**: Daily restart.\n⚠️ All active sessions are automatically closed.",
 
         # --- SERVER STATS (Advanced Stats) ---
         "srv_stats_title": "📈 Server Activity Audit",
@@ -746,10 +774,17 @@ TRANSLATIONS = {
         "dm_close_reason": "Reason",
 
         # --- DETAILED HELP EN ---
-        "help_title": "📚 Help", "help_desc": "Choose a category.",
-        "help_cat_user": "Users", "help_cat_admin": "Administrator",
-        "help_back": "Back", "help_back_lang": "Languages",
-        "help_user_desc": "Public commands:", "help_admin_desc": "Staff commands:",
+        "help_title": "📚 Help Menu", 
+        "help_desc": "Please choose a category below to view the available commands.",
+        "help_contact_dm": "💬 Need more help? Send Chronis a direct message: the bot owner will receive it and can reply to you.",
+        "help_cat_user": "Users", 
+        "help_cat_admin": "Administrators",
+        "help_cat_premium": "Premium",
+        "help_back": "Back", 
+        "help_back_lang": "Change Language",
+        "help_user_desc": "Commands available to all members:", 
+        "help_admin_desc": "Commands restricted to Staff:",
+        "help_premium_desc": "✨ **Exclusive commands and features:**",
         
         "help_cmds_user": (
             "**• `/about`**\n"
@@ -781,8 +816,6 @@ TRANSLATIONS = {
             "└ Configure the appointment system.\n\n"
             "**• `/delrole [player]`**\n"
             "└ Remove all roles except Citizen.\n\n"
-            "**• `/details [player]`**\n"
-            "└ Detailed history of last sessions.\n\n"
             "**• `/edittime`**\n"
             "└ Manually modify time (Add/Remove).\n\n"
             "**• `/employees`**\n"
@@ -796,16 +829,35 @@ TRANSLATIONS = {
             "└ Force pause an agent.\n\n"
             "**• `/pauselist`**\n"
             "└ Displays the list of paused agents.\n\n"
-            "**• `/presence [channel]`**\n"
-            "└ List of agents on duty.\n\n"
+            "**• `/reaction_list [channel]`**\n"
+            "└ List of active/absent agents via reactions.\n\n"
             "**• `/remove_user`**\n"
             "└ Permanently delete an agent's folder.\n\n"
             "**• `/reset_server`**\n"
             "└ Global reset (Weekly/Monthly).\n\n"
             "**• `/server_stats`**\n"
-            "└ Server statistics and graphs.\n\n"
+            "└ Advanced server statistics and graphs.\n\n"
             "**• `/setup`**\n"
-            "└ General configuration panel."
+            "└ General bot configuration panel."
+        ),
+
+        "help_cmds_premium": (
+            "**• `/defcon`**\n"
+            "└ Broadcast a custom emergency alert.\n\n"
+            "**• `/details [player]`**\n"
+            "└ Access detailed session history of a player.\n\n"
+            "**• `/export`**\n"
+            "└ Download global statistics as an Excel file (`.csv`).\n\n"
+            "**• `/premium`**\n"
+            "└ Manage or discover the server's subscription.\n\n"
+            "**🌟 Included Perks:**\n"
+            "• 📊 **Analytics** : Weekly comparative report.\n"
+            "• 🔔 **Reminders** : Auto PM to late agents before purge.\n"
+            "• 🏷️ Auto `On Duty` role.\n"
+            "• 🎨 Custom global bot color.\n"
+            "• ⏰ Configurable auto-purge.\n"
+            "• 🏥 Create unlimited Appointment reasons.\n"
+            "• 🔕 No partner ads in Chronis."
         ),
 
         # --- GENERAL LOGS ---
@@ -847,5 +899,3 @@ TRANSLATIONS = {
         "role_added": "✅ Role {role} added to {user}."
     }
 }
-
-DATABASE_NAME = "chronos.db"
