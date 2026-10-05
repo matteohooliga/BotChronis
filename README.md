@@ -14,7 +14,7 @@
 
 - Boutons persistants **Début / Pause / Fin** et panneau actualisé toutes les **10 secondes**.
 - Calcul du temps effectif, pauses comprises, et statistiques individuelles ou globales.
-- Maintenance quotidienne à **04 h, heure de Paris** : fermeture des sessions actives, redémarrage et confirmation au retour du bot.
+- Maintenance quotidienne à **04 h, heure de Paris** : fermeture des sessions actives et redémarrage. La confirmation est publiée uniquement dans le salon de logs du serveur de développement.
 - Mode maintenance global activable uniquement par le propriétaire avec `+maintenance on` ; il réserve les panneaux et commandes `/` au propriétaire.
 
 ### 🏥 Rendez-vous et absences
@@ -35,7 +35,7 @@
 
 - `/help` présente les commandes et invite à envoyer un MP à Chronis pour obtenir de l'aide.
 - Le bot répond aux questions reconnues dans `faq.json`. Chaque MP est aussi transmis au propriétaire, qui dispose d'un bouton **Répondre** pour répondre directement à l'utilisateur.
-- Aucune publicité automatique dans les annonces de 04 h, les redémarrages, les rappels en MP ou les bilans.
+- Aucune publicité automatique pendant la maintenance de 04 h, les redémarrages, les rappels en MP ou les bilans.
 
 ### 🛠️ Architecture
 
@@ -151,7 +151,7 @@ La base est initialisée au premier lancement. Le statut normal du bot revient a
 ## 🚀 Features
 
 - Persistent **Start / Pause / End** controls; service panel refreshes every **10 seconds**.
-- Daily restart at **04:00 Paris time** closes active sessions and restores the normal status on reconnect.
+- Daily restart at **04:00 Paris time** closes active sessions and restores the normal status on reconnect. Completion is announced only in the development server's log channel.
 - Appointment reasons, booking menus, private tickets and transcripts; absence management.
 - Personal and server statistics, charts and a leaderboard.
 - **Premium** includes weekly CSV reports, configurable reset time, goal reminders, custom colours, unlimited appointment reasons and `/defcon` alerts. The owner can grant or revoke manual Premium rights.
