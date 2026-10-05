@@ -134,7 +134,7 @@ La base est initialisée au premier lancement. Le statut normal du bot revient a
 | Commande | Accès | Description |
 | :-- | :-- | :-- |
 | `+help` | Tous | Liste des commandes préfixées. |
-| `+sync`, `+restart` | Admin | Synchroniser les commandes ou redémarrer le bot. |
+| `+sync`, `+restart` | Admin | Synchroniser les commandes ou redémarrer le bot. Le message de `+restart` est mis à jour dans le salon où la commande a été lancée. |
 | `+infos` | Propriétaire | Serveurs classés par membres, avec leur statut Premium. |
 | `+premium_list` | Propriétaire | Liste des serveurs Premium. |
 | `+add_premium <ID>`, `+remove_premium <ID>` | Propriétaire | Ajouter ou retirer un droit Premium manuel. Un abonnement Discord reste géré par Discord. |
@@ -181,7 +181,7 @@ Keep `commands.py` beside `bot.py` at the repository root. The bot accepts `cogs
 | Everyone | `/sum`, `/sumall`, `/absence`, `/absences_list`, `/feedback`, `/help`, `/about`, `/vote`, `/premium` | Statistics, absences, help and bot information. |
 | Manage Server | `/forcestart`, `/pause`, `/edittime`, `/details`, `/pauselist`, `/employees`, `/delrole` | Manage staff activity and records. |
 | Administrator | `/setup`, `/config_rdv`, `/server_stats`, `/presence`, `/reaction_list`, `/service_list`, `/close`, `/cancel`, `/remove_user`, `/reset_server`, `/auto_role`, `/export`, `/defcon` | Configure and manage the server. `/defcon` needs Premium; `/export` needs Premium or a valid vote. |
-| Administrator | `+sync`, `+restart` | Sync commands or restart Chronis. |
+| Administrator | `+sync`, `+restart` | Sync commands or restart Chronis. The `+restart` message is updated in the channel where the command was run. |
 | Bot owner | `+infos`, `+premium_list`, `+add_premium <ID>`, `+remove_premium <ID>`, `+maintenance`, `+sync_global`, `+fix_doublons`, `+debug`, `+start`, `+stop` | Manage the bot and manual Premium rights. |
 
 The `+help` command is available to everyone. The weekly report runs only on Premium servers and contains no advertising.

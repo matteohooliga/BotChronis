@@ -502,12 +502,17 @@ class ChronosBot(commands.Bot):
     async def before_restart_recovery(self):
         await self.wait_until_ready()
 
-    async def request_restart(self, reason):
+    async def request_restart(self, reason, message=None):
         if self._restart_requested:
-            return
+            return False
         self._restart_requested = True
         state = {'logs': []}
         try:
+            if message is not None:
+                state['manual_message'] = {
+                    'channel_id': message.channel.id,
+                    'message_id': message.id,
+                }
             if reason == 'daily':
                 for data in await self.db.get_all_guild_configs():
                     guild_id = str(data['guild_id'])
@@ -527,6 +532,7 @@ class ChronosBot(commands.Bot):
             await self.update_status()
             await asyncio.sleep(2)
             await self.close()
+            return True
         except Exception:
             self._restart_requested = False
             await self.update_status()
@@ -546,13 +552,25 @@ class ChronosBot(commands.Bot):
         except (OSError, ValueError):
             logger.exception('Contexte de redémarrage illisible')
             return
-        # Nettoie les anciennes annonces publiées dans les autres serveurs.
+        # Les anciennes annonces automatiques sont retirées sans être diffusées ailleurs.
         messages = list(state.get('messages', []))
-        if state.get('manual_channel_id') and state.get('manual_message_id'):
-            messages.append({'channel_id': state['manual_channel_id'],
-                             'message_id': state['manual_message_id']})
+        manual_message = state.get('manual_message')
+        if not manual_message and state.get('manual_channel_id') and state.get('manual_message_id'):
+            manual_message = {'channel_id': state['manual_channel_id'],
+                              'message_id': state['manual_message_id']}
         logs = list(state.get('logs', state.get('log_messages', [])))
         pending = {'messages': [], 'logs': []}
+        if manual_message:
+            try:
+                channel = await self._channel(manual_message['channel_id'])
+                original = await channel.fetch_message(int(manual_message['message_id']))
+                if original.author.id == self.user.id:
+                    await original.edit(content='✅ **Redémarrage terminé !**')
+            except discord.NotFound:
+                logger.warning('Annonce de redémarrage manuel supprimée : %s', manual_message)
+            except (discord.DiscordException, KeyError, ValueError, AttributeError):
+                logger.exception('Annonce de redémarrage manuel non mise à jour : %s', manual_message)
+                pending['manual_message'] = manual_message
         for item in messages:
             try:
                 channel = await self._channel(item['channel_id'])
@@ -583,7 +601,7 @@ class ChronosBot(commands.Bot):
             except (discord.DiscordException, KeyError, ValueError, AttributeError):
                 logger.exception('Log de redémarrage non mis à jour : %s', item)
                 pending['logs'].append(item)
-        if pending['messages'] or pending['logs']:
+        if pending.get('manual_message') or pending['messages'] or pending['logs']:
             save_restart_state(pending)
         else:
             STATE_FILE.unlink(missing_ok=True)
@@ -767,8 +785,17 @@ def main():
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def restart(ctx):
-        await ctx.send('🔄 Redémarrage demandé. La confirmation sera publiée sur le serveur de développement.')
-        await bot.request_restart('manual')
+        message = await ctx.send('🔄 **Redémarrage en cours...**')
+        try:
+            started = await bot.request_restart('manual', message)
+            if not started:
+                await message.edit(content='ℹ️ **Redémarrage déjà en cours.**')
+        except Exception:
+            try:
+                await message.edit(content='❌ **Redémarrage non déclenché.**')
+            except discord.DiscordException:
+                logger.exception('Annonce de redémarrage non mise à jour après échec')
+            raise
 
     @bot.command(name='start')
     @commands.check(lambda ctx: str(ctx.author.id) == str(config.OWNER_ID))
