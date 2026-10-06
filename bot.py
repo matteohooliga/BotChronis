@@ -552,12 +552,16 @@ class ChronosBot(commands.Bot):
         except (OSError, ValueError):
             logger.exception('Contexte de redémarrage illisible')
             return
-        # Les anciennes annonces automatiques sont retirées sans être diffusées ailleurs.
+        # Les anciens états mélangeaient les annonces manuelles et quotidiennes.
         messages = list(state.get('messages', []))
         manual_message = state.get('manual_message')
         if not manual_message and state.get('manual_channel_id') and state.get('manual_message_id'):
             manual_message = {'channel_id': state['manual_channel_id'],
                               'message_id': state['manual_message_id']}
+        manual_ids = None
+        if manual_message:
+            manual_ids = (get_channel_id(manual_message.get('channel_id')),
+                          get_channel_id(manual_message.get('message_id')))
         logs = list(state.get('logs', state.get('log_messages', [])))
         pending = {'messages': [], 'logs': []}
         if manual_message:
@@ -573,14 +577,23 @@ class ChronosBot(commands.Bot):
                 pending['manual_message'] = manual_message
         for item in messages:
             try:
+                item_ids = (get_channel_id(item['channel_id']),
+                            get_channel_id(item['message_id']))
+                if item_ids == manual_ids:
+                    continue
                 channel = await self._channel(item['channel_id'])
                 original = await channel.fetch_message(int(item['message_id']))
                 if original.author.id == self.user.id:
-                    await original.delete()
+                    if original.content == '🔄 **Redémarrage en cours...**':
+                        await original.edit(content='✅ **Redémarrage terminé !**')
+                    elif original.content.startswith('🔄 Maintenance quotidienne'):
+                        await original.delete()
+                    else:
+                        logger.warning('Ancienne annonce inconnue conservée : %s', item)
             except discord.NotFound:
                 logger.warning('Annonce de redémarrage supprimée : %s', item)
             except (discord.DiscordException, KeyError, ValueError, AttributeError):
-                logger.exception('Ancienne annonce de redémarrage non supprimée : %s', item)
+                logger.exception('Ancienne annonce de redémarrage non traitée : %s', item)
                 pending['messages'].append(item)
         for item in logs:
             try:
